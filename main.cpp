@@ -1,2 +1,28 @@
 //メイン処理書く場所
 //ヒロシです。。。
+#include"DxLib.h"
+#include"SceneManager.h"
+#include"Constant.h"
+using namespace std;
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+
+	SetGraphMode(WIDTH, HEIGHT, 32);
+	ChangeWindowMode(TRUE);
+	SetMainWindowText("迷路");
+	if (DxLib_Init() == -1) return -1;
+	SetDrawScreen(DX_SCREEN_BACK);
+	SceneManager manager;
+
+	manager.ChangeScene(make_unique<Title>());
+	while (ProcessMessage() == 0) {
+		ClearDrawScreen();
+
+		manager.Update();
+		manager.Draw();
+
+		ScreenFlip();
+		WaitTimer(16);
+	}
+	DxLib_End();
+	return 0;
+}

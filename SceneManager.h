@@ -10,5 +10,6 @@ class SceneManager {
 public:
 	void Update();
 	void Draw();
-	void ChangeScene(unique_ptr<Scene> newScene);
+	void ChangeScene(unique_ptr<Scene> newScene,
+					 unique_ptr<Transition> trans = nullptr);
 };

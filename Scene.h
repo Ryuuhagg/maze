@@ -1,22 +1,23 @@
 #pragma once
+class SceneManager;
 class Scene {
 public:
-	virtual void Update() = 0;
+	virtual void Update(SceneManager& manager) = 0;
 	virtual void Draw() = 0;
 };
 
-class Title :Scene {
+class Title :public Scene {
 public:
-	void Update() override;
+	void Update(SceneManager& manager) override;
 	void Draw() override;
 };
-class Game :Scene {
+class Game :public Scene {
 public:
-	void Update() override;
+	void Update(SceneManager& manager) override;
 	void Draw() override;
 };
-class Result :Scene {
+class Result :public Scene {
 public:
-	void Update() override;
+	void Update(SceneManager& manager) override;
 	void Draw() override;
 };
