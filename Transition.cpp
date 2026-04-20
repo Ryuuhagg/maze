@@ -5,7 +5,11 @@
 void Fade::Update() {
 	if (fadeOut) {
 		alpha += 10;
-		if (alpha >= 255)fadeOut = false;
+		if (alpha >= 255) {
+			alpha = 255;
+			fadeOut = false;
+			switched = true;
+		}
 	}
 	else {
 		alpha -= 10;

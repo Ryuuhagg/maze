@@ -15,10 +15,11 @@ public:
 	virtual TransitionState GetState() = 0;
 };
 
-class Fade : Transition{
+class Fade : public Transition{
 private:
 	int alpha = 0;
 	bool fadeOut = true;
+	bool switched = false;
 public:
 	void Update() override;
 	void Draw() override;

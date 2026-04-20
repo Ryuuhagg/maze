@@ -1,21 +1,31 @@
 #include"Scene.h"
 #include"Constant.h"
 #include"SceneManager.h"
+#include"Character.h"
 #include"DxLib.h"
+using namespace std;
+Player p;
+Camela c(p);
 void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "タイトル画面",GetColor(255,255,255));
 }
 void Title::Update(SceneManager& manager) {
 	if (CheckHitKey(KEY_INPUT_SPACE)) {
-		manager.ChangeScene(std::make_unique<Game>());
+		manager.ChangeScene(
+			make_unique<Game>(), 
+			make_unique<Fade>()
+		);
 	}
 }
 void Game::Draw() {
-	DrawString(WIDTH / 2, HEIGHT / 2, "ゲーム画面", GetColor(255, 255, 255));
+	p.Draw();
+	DrawString(WIDTH / 2, HEIGHT-550, "ゲーム画面", GetColor(255, 255, 255));
 }
 void Game::Update(SceneManager& manager) {
+	p.Update();
+	c.Update();
 	if (CheckHitKey(KEY_INPUT_SPACE)) {
-		manager.ChangeScene(std::make_unique<Result>());
+		//manager.ChangeScene(std::make_unique<Result>());
 	}
 }
 void Result::Draw() {
