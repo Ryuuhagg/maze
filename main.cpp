@@ -23,13 +23,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		manager.Update();
 		manager.Draw();
 
-		DrawCube3D(
-			VGet(-50, -1, -50),
-			VGet(50, 0, 50),
-			GetColor(0, 255, 0),
-			GetColor(0, 255, 0),
-			TRUE
-		);
 		
 		ScreenFlip();
 		WaitTimer(16);

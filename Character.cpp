@@ -22,8 +22,6 @@ void Player::Update() {
     if (CheckHitKey(KEY_INPUT_A) || CheckHitKey(KEY_INPUT_LEFT)) angle.x -= speed * 0.01f;
     if (CheckHitKey(KEY_INPUT_D) || CheckHitKey(KEY_INPUT_RIGHT)) angle.x += speed * 0.01f;
 
-    
-
 }
 
 void Player::Draw() {

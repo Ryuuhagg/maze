@@ -20,6 +20,14 @@ void Title::Update(SceneManager& manager) {
 void Game::Draw() {
 	p.Draw();
 	DrawString(WIDTH / 2, HEIGHT-550, "ÉQÅ[ÉÄâÊñ ", GetColor(255, 255, 255));
+
+	DrawCube3D(
+		VGet(-50, -1, -50),
+		VGet(50, 0, 50),
+		GetColor(0, 255, 0),
+		GetColor(0, 255, 0),
+		TRUE
+	);
 }
 void Game::Update(SceneManager& manager) {
 	p.Update();
