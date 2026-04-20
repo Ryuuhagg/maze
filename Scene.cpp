@@ -2,6 +2,7 @@
 #include"Constant.h"
 #include"SceneManager.h"
 #include"Character.h"
+#include"Input.h"
 #include"DxLib.h"
 using namespace std;
 Player p;
@@ -10,7 +11,7 @@ void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "ƒ^ƒCƒgƒ‹‰æ–Ê",GetColor(255,255,255));
 }
 void Title::Update(SceneManager& manager) {
-	if (CheckHitKey(KEY_INPUT_SPACE)) {
+	if (Input::IsKeyTrigger(KEY_INPUT_SPACE)) {
 		manager.ChangeScene(
 			make_unique<Game>(), 
 			make_unique<Slide>()
