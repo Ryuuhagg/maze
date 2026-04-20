@@ -1,4 +1,5 @@
 #include"Character.h"
+#include"Input.h"
 #include<math.h>
 Player::Player():Character(5)
 {
@@ -8,20 +9,11 @@ Player::Player():Character(5)
 void Player::Init() {
     pos = VGet(0, 0, 0);
     m_Size = 10;
+    angle = { 0.0f, 0.3f };
 }
 
 void Player::Update() {
-    if (CheckHitKey(KEY_INPUT_W) || CheckHitKey(KEY_INPUT_UP)) {
-        pos.x += sinf(angle.x) * speed;
-        pos.z += cosf(angle.x) * speed;
-    }
-    if (CheckHitKey(KEY_INPUT_S) || CheckHitKey(KEY_INPUT_DOWN)) { 
-        pos.x -= sinf(angle.x) * speed;
-        pos.z -= cosf(angle.x) * speed;
-    }
-    if (CheckHitKey(KEY_INPUT_A) || CheckHitKey(KEY_INPUT_LEFT)) angle.x -= speed * 0.01f;
-    if (CheckHitKey(KEY_INPUT_D) || CheckHitKey(KEY_INPUT_RIGHT)) angle.x += speed * 0.01f;
-
+    Move();
 }
 
 void Player::Draw() {
@@ -33,6 +25,30 @@ void Player::Draw() {
         TRUE
     );
 }
+
+void Player::Move() {
+    float x = Input::GetAxisX();
+    float y = Input::GetAxisY();
+
+    float moveX = 0;
+    float moveZ = 0;
+
+    moveX += sinf(angle.x) * y;
+    moveZ += cosf(angle.x) * y;
+
+    moveX += cosf(angle.x) * x;
+    moveZ -= sinf(angle.x) * x;
+
+    float length = sqrtf(moveX * moveX + moveZ * moveZ);
+    if (length > 1.0f) {
+        moveX /= length;
+        moveZ /= length;
+    }
+
+    pos.x += moveX * speed;
+    pos.z += moveZ * speed;
+}
+
 
 void Player::MouseMove() {
     int mouseX, mouseY;

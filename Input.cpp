@@ -1,5 +1,6 @@
 #include"Input.h"
 #include"DxLib.h"
+#include <cmath>
 
 char Input::now[256];
 char Input::prev[256];
@@ -13,4 +14,83 @@ void Input::Update() {
 
 	padPrev = padNow;
 	padNow = GetJoypadInputState(DX_INPUT_PAD1);
+}
+
+bool Input::IsActionTrigger(Action action) {
+    switch (action) {
+    case Action::Confirm:
+        return IsKeyTrigger(KEY_INPUT_SPACE) || IsPadTrigger(PAD_INPUT_A);
+
+    case Action::Cancel:
+        return IsKeyTrigger(KEY_INPUT_ESCAPE) || IsPadTrigger(PAD_INPUT_B);
+    }
+
+    return false;
+}
+
+float Input::GetPadLX() {
+    int x, y;
+    GetJoypadAnalogInput(&x, &y, DX_INPUT_PAD1);
+    return x / 1000.0f;
+}
+
+float Input::GetPadLY() {
+    int x, y;
+    GetJoypadAnalogInput(&x, &y, DX_INPUT_PAD1);
+    return y / 1000.0f;
+}
+
+float Input::GetPadRX() {
+    int x, y;
+    GetJoypadAnalogInputRight(&x, &y, DX_INPUT_PAD1);
+    return x / 1000.0f;
+}
+
+float Input::GetPadRY() {
+    int x, y;
+    GetJoypadAnalogInputRight(&x, &y, DX_INPUT_PAD1);
+    return y / 1000.0f;
+}
+
+float Input::GetAxisX() {
+    float x = 0;
+
+    // キーボード
+    if (IsKeyPressed(KEY_INPUT_A)) x -= 1.0f;
+    if (IsKeyPressed(KEY_INPUT_D)) x += 1.0f;
+
+    // パッド
+    float lx = GetPadLX();
+
+    lx = ApplyDeadZone(lx);
+
+    // 強い方を使う
+    if (fabs(lx) > fabs(x)) x = lx;
+
+    return x;
+}
+
+float Input::GetAxisY() {
+    float y = 0;
+
+    // キーボード
+    if (IsKeyPressed(KEY_INPUT_W)) y += 1.0f;
+    if (IsKeyPressed(KEY_INPUT_S)) y -= 1.0f;
+
+    // パッド
+    float ly = GetPadLY();
+
+    // 上がマイナスなので反転
+    ly = -ly;
+
+    ly = ApplyDeadZone(ly);
+
+    if (fabs(ly) > fabs(y)) y = ly;
+
+    return y;
+}
+
+float Input::ApplyDeadZone(float v) {
+    float dead = 0.2f;
+    return (fabs(v) < dead) ? 0.0f : v;
 }

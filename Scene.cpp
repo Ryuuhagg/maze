@@ -11,7 +11,7 @@ void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "タイトル画面",GetColor(255,255,255));
 }
 void Title::Update(SceneManager& manager) {
-	if (Input::IsKeyTrigger(KEY_INPUT_SPACE)) {
+	if (Input::IsActionTrigger(Action::Confirm)) {
 		manager.ChangeScene(
 			make_unique<Game>(), 
 			make_unique<Slide>()
@@ -33,15 +33,23 @@ void Game::Draw() {
 void Game::Update(SceneManager& manager) {
 	p.Update();
 	c.Update();
-	if (CheckHitKey(KEY_INPUT_SPACE)) {
-		//manager.ChangeScene(std::make_unique<Result>());
+	if (Input::IsActionTrigger(Action::Confirm)) {
+		manager.ChangeScene(make_unique<Result>(), make_unique<Fade>());
 	}
 }
 void Result::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "リザルト画面", GetColor(255, 255, 255));
 }
 void Result::Update(SceneManager& manager) {
-	if (CheckHitKey(KEY_INPUT_SPACE)) {
+	if (Input::IsActionTrigger(Action::Confirm)) {
 		manager.ChangeScene(std::make_unique<Title>());
 	}
+}
+
+void Create::Update(SceneManager& manager) {
+
+}
+
+void Create::Draw() {
+
 }

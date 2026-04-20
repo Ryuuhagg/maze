@@ -27,6 +27,8 @@ public:
 	void Update()override;
 	void Draw() override;
 
+	void Move();
+
 	void MouseMove();
 
 	Angle getAngle() { return angle; }

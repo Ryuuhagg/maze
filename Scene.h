@@ -21,3 +21,9 @@ public:
 	void Update(SceneManager& manager) override;
 	void Draw() override;
 };
+
+class Create : public Scene {
+public:
+	void Update(SceneManager& manager) override;
+	void Draw() override;
+};
