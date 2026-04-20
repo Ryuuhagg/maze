@@ -1,19 +1,21 @@
 #include"DxLib.h"
 #include"Transition.h"
-#include"Constant.h"
 
 void Fade::Update() {
-	if (fadeOut) {
+	if (Enter) {
 		alpha += 10;
 		if (alpha >= 255) {
 			alpha = 255;
-			fadeOut = false;
-			switched = true;
+			Enter = false;
+			Switched = true;
 		}
 	}
 	else {
 		alpha -= 10;
-		if (alpha <= 0) alpha = 0;
+		if (alpha <= 0) {
+			alpha = 0;
+			Exit = false;
+		}
 	}
 }
 
@@ -24,12 +26,46 @@ void Fade::Draw() {
 }
 
 TransitionState Fade::GetState() {
-	if (switched) {
-		switched = false;
+	if (Switched) {
+		Switched = false;
+		Exit = true;
 		return TransitionState::Switching;
 	}
-	if (fadeOut) return TransitionState::Enter;
-	if (alpha > 0) return TransitionState::Exit;
+	if (Enter) return TransitionState::Enter;
+	if (Exit) return TransitionState::Exit;
 
+	return TransitionState::Finished;
+}
+
+void Slide::Update() {
+	if (Enter) {
+		current += 10;
+		if (current == 0) {
+			current = 0;
+			Enter = false;
+			Switched = true;
+		}
+	}
+	else {
+		current += 10;
+		if (current > WIDTH) {
+			Exit = false;
+			current = WIDTH;
+		}
+	}
+}
+
+void Slide::Draw() {
+	DrawBox(current, 0, current+WIDTH, HEIGHT, GetColor(100, 100, 100), TRUE);
+}
+
+TransitionState Slide::GetState() {
+	if (Switched) {
+		Switched = false;
+		Exit = true;
+		return TransitionState::Switching;
+	}
+	if (Enter) return TransitionState::Enter;
+	if (Exit)return TransitionState::Exit;
 	return TransitionState::Finished;
 }

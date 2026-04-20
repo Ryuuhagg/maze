@@ -13,7 +13,7 @@ void Title::Update(SceneManager& manager) {
 	if (CheckHitKey(KEY_INPUT_SPACE)) {
 		manager.ChangeScene(
 			make_unique<Game>(), 
-			make_unique<Fade>()
+			make_unique<Slide>()
 		);
 	}
 }

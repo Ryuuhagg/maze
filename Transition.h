@@ -1,4 +1,5 @@
 #pragma once
+#include"Constant.h"
 enum class TransitionState {
 	None,
 	Enter,      // ââèoäJén
@@ -8,6 +9,10 @@ enum class TransitionState {
 };
 
 class Transition {
+protected:
+	bool Enter = true;
+	bool Switched = false;
+	bool Exit = false;
 public:
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
@@ -18,12 +23,21 @@ public:
 class Fade : public Transition{
 private:
 	int alpha = 0;
-	bool fadeOut = true;
-	bool switched = false;
+	
 public:
 	void Update() override;
 	void Draw() override;
-	bool IsFinished() override { return !fadeOut && alpha <= 0; }
+	bool IsFinished() override { return !Enter && alpha <= 0; }
 	bool IsMidPoint() { return alpha >= 255; }
+	TransitionState GetState() override;
+};
+
+class Slide : public Transition {
+private:
+	int current = -WIDTH;
+public:
+	void Update() override;
+	void Draw() override;
+	bool IsFinished() override { return current <= WIDTH; }
 	TransitionState GetState() override;
 };
