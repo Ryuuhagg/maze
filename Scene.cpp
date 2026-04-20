@@ -32,7 +32,7 @@ void Game::Draw() {
 }
 void Game::Update(SceneManager& manager) {
 	p.Update();
-	c.Update();
+	c.Update();   
 	if (Input::IsActionTrigger(Action::Confirm)) {
 		manager.ChangeScene(make_unique<Result>(), make_unique<Fade>());
 	}

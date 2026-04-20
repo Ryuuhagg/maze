@@ -1,6 +1,8 @@
 #include"Character.h"
 #include"Input.h"
+#include"Constant.h"
 #include<math.h>
+#include <algorithm>
 Player::Player():Character(5)
 {
     Init();
@@ -8,12 +10,19 @@ Player::Player():Character(5)
 
 void Player::Init() {
     pos = VGet(0, 0, 0);
+    y = 0;              // Å©Ç±ÇÍí«â¡
+    vy = 0;             // Å©Ç±ÇÍÇ‡
+    isGround = true;    // Å©Ç±ÇÍÇ‡
+    gravity = -0.1f;   // Å©ämîF
+
     m_Size = 10;
     angle = { 0.0f, 0.3f };
 }
 
 void Player::Update() {
     Move();
+    MoveAngle();
+    Jump();
 }
 
 void Player::Draw() {
@@ -27,8 +36,8 @@ void Player::Draw() {
 }
 
 void Player::Move() {
-    float x = Input::GetAxisX();
-    float y = Input::GetAxisY();
+    float x = Input::GetAxisLX();
+    float y = Input::GetAxisLY();
 
     float moveX = 0;
     float moveZ = 0;
@@ -49,27 +58,35 @@ void Player::Move() {
     pos.z += moveZ * speed;
 }
 
+void Player::MoveAngle() {
+    float rx = Input::GetAxisRX();
+    float ry = Input::GetAxisRY();
 
-void Player::MouseMove() {
-    int mouseX, mouseY;
-    GetMousePoint(&mouseX, &mouseY);
+    angle.x += rx * 0.05f;
+    angle.y += ry * 0.05f;
 
-    int prevX = mouseX;
-    int prevY = mouseY;
-
-    int dx = mouseX - prevX;
-    int dy = mouseY - prevY;
-
-    prevX = mouseX;
-    prevY = mouseY;
-
-    angle.x += dx * sensitivity;
-    angle.y += dy * sensitivity;
-
-    
+    angle.y = Clamp(angle.y, -0.4f, 1.2f);
 }
 
-Camela::Camela(Player& p) :Character(0),p(p),distance(90.0f)
+void Player::Jump() {
+    if (Input::IsActionTrigger(Action::Jump) && isGround) {
+        vy = 3.0f;
+        isGround = false;
+    }
+
+    vy += gravity;
+    y += vy;
+
+    if (y <= 0) {
+        y = 0;
+        vy = 0;
+        isGround = true;
+    }
+
+    pos.y = y;
+}
+
+Camela::Camela(Player& p) :Character(0),p(p),distance(60)
 {
     Init();
 }
@@ -82,7 +99,7 @@ void Camela::Update() {
     SetCameraPositionAndTarget_UpVecY(
         VGet(
           p.getVECTOR().x - sinf(p.getAngle().x) * distance
-        , p.getVECTOR().y + distance
+        , p.getVECTOR().y + sinf(p.getAngle().y) * distance
         , p.getVECTOR().z - cosf(p.getAngle().x) * distance)
         , p.getVECTOR()
     );

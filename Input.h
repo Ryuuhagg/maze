@@ -32,8 +32,11 @@ public:
 	static float GetPadRX();
 	static float GetPadRY();
 
-	static float GetAxisX();
-	static float GetAxisY();
+	static float GetAxisLX();
+	static float GetAxisLY();
+
+	static float GetAxisRX();
+	static float GetAxisRY();
 
 	static float ApplyDeadZone(float v);
 };

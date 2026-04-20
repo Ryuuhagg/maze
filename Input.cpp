@@ -19,12 +19,14 @@ void Input::Update() {
 bool Input::IsActionTrigger(Action action) {
     switch (action) {
     case Action::Confirm:
-        return IsKeyTrigger(KEY_INPUT_SPACE) || IsPadTrigger(PAD_INPUT_A);
+        return IsKeyTrigger(KEY_INPUT_RETURN) || IsPadTrigger(PAD_INPUT_B);
 
     case Action::Cancel:
-        return IsKeyTrigger(KEY_INPUT_ESCAPE) || IsPadTrigger(PAD_INPUT_B);
-    }
+        return IsKeyTrigger(KEY_INPUT_ESCAPE) || IsPadTrigger(PAD_INPUT_A);
 
+    case Action::Jump:
+        return IsKeyTrigger(KEY_INPUT_SPACE) || IsPadTrigger(PAD_INPUT_X);
+    }
     return false;
 }
 
@@ -52,7 +54,7 @@ float Input::GetPadRY() {
     return y / 1000.0f;
 }
 
-float Input::GetAxisX() {
+float Input::GetAxisLX() {
     float x = 0;
 
     // キーボード
@@ -70,7 +72,7 @@ float Input::GetAxisX() {
     return x;
 }
 
-float Input::GetAxisY() {
+float Input::GetAxisLY() {
     float y = 0;
 
     // キーボード
@@ -79,6 +81,44 @@ float Input::GetAxisY() {
 
     // パッド
     float ly = GetPadLY();
+
+    // 上がマイナスなので反転
+    ly = -ly;
+
+    ly = ApplyDeadZone(ly);
+
+    if (fabs(ly) > fabs(y)) y = ly;
+
+    return y;
+}
+
+float Input::GetAxisRX() {
+    float x = 0;
+
+    // キーボード
+    if (IsKeyPressed(KEY_INPUT_LEFT)) x -= 1.0f;
+    if (IsKeyPressed(KEY_INPUT_RIGHT)) x += 1.0f;
+
+    // パッド
+    float lx = GetPadRX();
+
+    lx = ApplyDeadZone(lx);
+
+    // 強い方を使う
+    if (fabs(lx) > fabs(x)) x = lx;
+
+    return x;
+}
+
+float Input::GetAxisRY() {
+    float y = 0;
+
+    // キーボード
+    if (IsKeyPressed(KEY_INPUT_UP)) y += 1.0f;
+    if (IsKeyPressed(KEY_INPUT_DOWN)) y -= 1.0f;
+
+    // パッド
+    float ly = GetPadRY();
 
     // 上がマイナスなので反転
     ly = -ly;

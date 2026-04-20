@@ -20,7 +20,10 @@ struct Angle {
 class Player : public Character {
 	int m_Size = 0;
 	Angle angle = { 0.0f, 0.3f };
-	float sensitivity = 0.005f;
+	float y = 0;
+	float vy = 0;
+	float gravity = -0.01f;
+	bool isGround = true;
 public:
 	Player();
 	void Init()override;
@@ -29,7 +32,9 @@ public:
 
 	void Move();
 
-	void MouseMove();
+	void MoveAngle();
+
+	void Jump();
 
 	Angle getAngle() { return angle; }
 };
