@@ -1,6 +1,6 @@
 #include"DxLib.h"
 #include"Transition.h"
-
+#pragma region Fade
 void Fade::Update() {
 	if (Enter) {
 		alpha += 10;
@@ -10,7 +10,7 @@ void Fade::Update() {
 			Switched = true;
 		}
 	}
-	else {
+	if (Exit) {
 		alpha -= 10;
 		if (alpha <= 0) {
 			alpha = 0;
@@ -36,7 +36,8 @@ TransitionState Fade::GetState() {
 
 	return TransitionState::Finished;
 }
-
+#pragma endregion
+#pragma region Slide
 void Slide::Update() {
 	if (Enter) {
 		current += 10;
@@ -46,7 +47,7 @@ void Slide::Update() {
 			Switched = true;
 		}
 	}
-	else {
+	if (Exit) {
 		current += 10;
 		if (current > WIDTH) {
 			Exit = false;
@@ -69,3 +70,4 @@ TransitionState Slide::GetState() {
 	if (Exit)return TransitionState::Exit;
 	return TransitionState::Finished;
 }
+#pragma endregion
