@@ -19,13 +19,13 @@ void Input::Update() {
 bool Input::IsActionTrigger(Action action) {
     switch (action) {
     case Action::Confirm:
-        return IsKeyTrigger(KEY_INPUT_RETURN) || IsPadTrigger(PAD_INPUT_B);
+        return IsKeyTrigger(KEY_INPUT_RETURN) || IsPadTrigger(PAD_INPUT_2);
 
     case Action::Cancel:
-        return IsKeyTrigger(KEY_INPUT_ESCAPE) || IsPadTrigger(PAD_INPUT_A);
+        return IsKeyTrigger(KEY_INPUT_ESCAPE) || IsPadTrigger(PAD_INPUT_1);
 
     case Action::Jump:
-        return IsKeyTrigger(KEY_INPUT_SPACE) || IsPadTrigger(PAD_INPUT_X);
+        return IsKeyTrigger(KEY_INPUT_SPACE) || IsPadTrigger(PAD_INPUT_3);
     }
     return false;
 }

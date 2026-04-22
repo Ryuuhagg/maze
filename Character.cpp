@@ -65,7 +65,7 @@ void Player::MoveAngle() {
     angle.x += rx * 0.05f;
     angle.y += ry * 0.05f;
 
-    angle.y = Clamp(angle.y, -0.4f, 1.2f);
+    angle.y = Clamp(angle.y, -0.0f, 1.5f);
 }
 
 void Player::Jump() {
@@ -92,7 +92,7 @@ Camela::Camela(Player& p) :Character(0),p(p),distance(60)
 }
 
 void Camela::Init() {
-    
+
 }
 
 void Camela::Update() {
