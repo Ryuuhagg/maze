@@ -18,6 +18,7 @@ struct Angle {
 };
 
 class Player : public Character {
+	int m_model = 0;
 	int m_Size = 0;
 	Angle angle = { 0.0f, 0.3f };
 	float y = 0;
@@ -26,6 +27,8 @@ class Player : public Character {
 	bool isGround = true;
 public:
 	Player();
+	~Player();
+
 	void Init()override;
 	void Update()override;
 	void Draw() override;

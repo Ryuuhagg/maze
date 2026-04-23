@@ -16,6 +16,7 @@ void Title::Update(SceneManager& manager) {
 			make_unique<Game>(), 
 			make_unique<Slide>()
 		);
+		p.Init();
 	}
 }
 void Game::Draw() {

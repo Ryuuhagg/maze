@@ -8,31 +8,36 @@ Player::Player():Character(5)
     Init();
 }
 
+Player::~Player() {
+    MV1DeleteModel(m_model);
+}
+
 void Player::Init() {
+    m_model = MV1LoadModel("mv1Model/animal-beaver.mv1");
+    MV1SetScale(m_model, VGet(0.05f, 0.05f, 0.05f));
     pos = VGet(0, 0, 0);
-    y = 0;              // ←これ追加
-    vy = 0;             // ←これも
-    isGround = true;    // ←これも
-    gravity = -0.1f;   // ←確認
+    y = 0;             
+    vy = 0;             
+    isGround = true;    
+    gravity = -0.1f;   
 
     m_Size = 10;
-    angle = { 0.0f, 0.3f };
+    angle = { 0.0f, 1.5f };
+
 }
 
 void Player::Update() {
     Move();
     MoveAngle();
     Jump();
+
+    MV1SetPosition(m_model, pos);
+    MV1SetRotationXYZ(m_model, VGet(0, angle.x + DX_PI_F, 0));
+
 }
 
 void Player::Draw() {
-    DrawCube3D(
-        VAdd(pos, VGet(-m_Size / 2, 0, -m_Size / 2)), // 左下手前
-        VAdd(pos, VGet(m_Size / 2, m_Size, m_Size / 2)), // 右上奥
-        GetColor(255, 0, 0),
-        GetColor(255, 0, 0),
-        TRUE
-    );
+    MV1DrawModel(m_model);
 }
 
 void Player::Move() {

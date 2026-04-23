@@ -25,7 +25,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		input.Update();
 		manager.Update();
 		manager.Draw();
-
 		
 		ScreenFlip();
 		WaitTimer(16);
