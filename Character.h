@@ -1,5 +1,6 @@
 #pragma once
 #include"DxLib.h"
+#include"Model.h"
 class Character {
 protected:
 	float speed;
@@ -17,14 +18,30 @@ struct Angle {
 	float y;
 };
 
+enum class PlayerState {
+	Jump,
+	Idle,
+	Walk
+};
+
+
 class Player : public Character {
 	int m_model = 0;
+	int m_animeIndex = 0;
 	int m_Size = 0;
-	Angle angle = { 0.0f, 0.3f };
+	int m_currentAnimNo = -1;
+	
+	int m_animIdle = 1;
+	int m_animWalk = 2;
+	int m_animJump = 0;
+
 	float y = 0;
 	float vy = 0;
 	float gravity = -0.01f;
 	bool isGround = true;
+
+	PlayerState m_state = PlayerState::Idle;
+	Angle angle = { 0.0f, 0.3f };
 public:
 	Player();
 	~Player();
@@ -38,6 +55,11 @@ public:
 	void MoveAngle();
 
 	void Jump();
+
+	void UpdateState();
+	void UpdateAnimation();
+
+	void ChangeModel(const ModelData& data);
 
 	Angle getAngle() { return angle; }
 };

@@ -3,7 +3,7 @@
 #include"Constant.h"
 #include<math.h>
 #include <algorithm>
-Player::Player():Character(5)
+Player::Player():Character(1)
 {
     Init();
 }
@@ -13,23 +13,28 @@ Player::~Player() {
 }
 
 void Player::Init() {
-    m_model = MV1LoadModel("mv1Model/animal-beaver.mv1");
+    ChangeModel(beaver);
+
     MV1SetScale(m_model, VGet(0.05f, 0.05f, 0.05f));
+
     pos = VGet(0, 0, 0);
-    y = 0;             
-    vy = 0;             
-    isGround = true;    
-    gravity = -0.1f;   
+    y = 0;
+    vy = 0;
+    isGround = true;
+    gravity = -0.1f;
 
     m_Size = 10;
     angle = { 0.0f, 1.5f };
-
 }
 
 void Player::Update() {
+    
     Move();
     MoveAngle();
     Jump();
+
+    UpdateState();
+    UpdateAnimation();
 
     MV1SetPosition(m_model, pos);
     MV1SetRotationXYZ(m_model, VGet(0, angle.x + DX_PI_F, 0));
@@ -91,13 +96,78 @@ void Player::Jump() {
     pos.y = y;
 }
 
+void Player::UpdateState() {
+    float x = Input::GetAxisLX();
+    float y = Input::GetAxisLY();
+
+    if (!isGround) {
+        m_state = PlayerState::Jump;
+    }
+    else if (fabs(x) > 0.1f || fabs(y) > 0.1f) {
+        m_state = PlayerState::Walk;
+    }
+    else {
+        m_state = PlayerState::Idle;
+    }
+}
+
+void Player::UpdateAnimation() {
+    int nextAnim = 0;
+
+    switch (m_state) {
+    case PlayerState::Jump: nextAnim = 0; break;
+    case PlayerState::Idle: nextAnim = 1; break;
+    case PlayerState::Walk: nextAnim = 2; break;
+    }
+
+    if (nextAnim != m_currentAnimNo) {
+
+        MV1DetachAnim(m_model, m_animeIndex);
+
+        m_animeIndex = MV1AttachAnim(m_model, nextAnim);
+        MV1SetAttachAnimBlendRate(m_model, m_animeIndex, 1.0f);
+
+        m_currentAnimNo = nextAnim;
+    }
+
+    float now = MV1GetAttachAnimTime(m_model, m_animeIndex);
+    float total = MV1GetAttachAnimTotalTime(m_model, m_animeIndex);
+
+    now += 0.5f;
+    now = fmod(now, total);
+
+    MV1SetAttachAnimTime(m_model, m_animeIndex, now);
+}
+
+void Player::ChangeModel(const ModelData& data) {
+
+    if (m_model != 0) {
+        MV1DeleteModel(m_model);
+    }
+
+    m_model = MV1LoadModel(data.path);
+
+    m_animIdle = data.idle;
+    m_animWalk = data.walk;
+    m_animJump = data.jump;
+
+    m_animeIndex = MV1AttachAnim(m_model, m_animIdle);
+    m_currentAnimNo = m_animIdle;
+}
+
 Camela::Camela(Player& p) :Character(0),p(p),distance(60)
 {
     Init();
 }
 
 void Camela::Init() {
-
+    SetCameraPositionAndTarget_UpVecY(
+        VGet(
+            p.getVECTOR().x - sinf(p.getAngle().x) * distance
+            , p.getVECTOR().y + sinf(p.getAngle().y) * distance
+            , p.getVECTOR().z - cosf(p.getAngle().x) * distance)
+        , p.getVECTOR()
+    );
 }
 
 void Camela::Update() {
