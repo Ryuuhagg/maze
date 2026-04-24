@@ -13,7 +13,7 @@ Player::~Player() {
 }
 
 void Player::Init() {
-    ChangeModel(beaver);
+    ChangeModel(cat);
 
     MV1SetScale(m_model, VGet(0.05f, 0.05f, 0.05f));
 
@@ -30,7 +30,7 @@ void Player::Init() {
 void Player::Update() {
     
     Move();
-    MoveAngle();
+    //MoveAngle();
     Jump();
 
     UpdateState();
@@ -52,16 +52,20 @@ void Player::Move() {
     float moveX = 0;
     float moveZ = 0;
 
-    moveX += sinf(angle.x) * y;
-    moveZ += cosf(angle.x) * y;
+    moveX += sinf(C_angle.x) * y;
+    moveZ += cosf(C_angle.x) * y;
 
-    moveX += cosf(angle.x) * x;
-    moveZ -= sinf(angle.x) * x;
+    moveX += cosf(C_angle.x) * x;
+    moveZ -= sinf(C_angle.x) * x;
 
     float length = sqrtf(moveX * moveX + moveZ * moveZ);
     if (length > 1.0f) {
         moveX /= length;
         moveZ /= length;
+    }
+
+    if (length > 0.1f) {
+        angle.x = atan2f(moveX, moveZ);
     }
 
     pos.x += moveX * speed;
@@ -72,8 +76,8 @@ void Player::MoveAngle() {
     float rx = Input::GetAxisRX();
     float ry = Input::GetAxisRY();
 
-    angle.x += rx * 0.05f;
-    angle.y += ry * 0.05f;
+    angle.x += rx * 0.01f;
+    angle.y += ry * 0.01f;
 
     angle.y = Clamp(angle.y, -0.0f, 1.5f);
 }
@@ -155,31 +159,39 @@ void Player::ChangeModel(const ModelData& data) {
     m_currentAnimNo = m_animIdle;
 }
 
+void Player::GetAngle(Angle& a) { C_angle = a; }
+
 Camela::Camela(Player& p) :Character(0),p(p),distance(60)
 {
     Init();
 }
 
 void Camela::Init() {
-    SetCameraPositionAndTarget_UpVecY(
-        VGet(
-            p.getVECTOR().x - sinf(p.getAngle().x) * distance
-            , p.getVECTOR().y + sinf(p.getAngle().y) * distance
-            , p.getVECTOR().z - cosf(p.getAngle().x) * distance)
-        , p.getVECTOR()
-    );
+    camelaAngle = { 0.0f, 0.3f };
 }
 
 void Camela::Update() {
+    p.GetAngle(camelaAngle);
     SetCameraPositionAndTarget_UpVecY(
         VGet(
-          p.getVECTOR().x - sinf(p.getAngle().x) * distance
-        , p.getVECTOR().y + sinf(p.getAngle().y) * distance
-        , p.getVECTOR().z - cosf(p.getAngle().x) * distance)
+          p.getVECTOR().x - sinf(camelaAngle.x) * distance
+        , p.getVECTOR().y + sinf(camelaAngle.y) * distance
+        , p.getVECTOR().z - cosf(camelaAngle.x) * distance)
         , p.getVECTOR()
     );
+    MoveAngle();
 }
 
 void Camela::Draw() {
 
+}
+
+void Camela::MoveAngle() {
+    float rx = Input::GetAxisRX();
+    float ry = Input::GetAxisRY();
+
+    camelaAngle.x += rx * 0.03f;
+    camelaAngle.y += ry * 0.03f;
+
+    camelaAngle.y = Clamp(camelaAngle.y, -0.0f, 1.5f);
 }

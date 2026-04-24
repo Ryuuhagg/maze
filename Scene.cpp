@@ -24,8 +24,8 @@ void Game::Draw() {
 	DrawString(WIDTH / 2, HEIGHT-550, "ÉQÅ[ÉÄâÊñ ", GetColor(255, 255, 255));
 
 	DrawCube3D(
-		VGet(-50, -1, -50),
-		VGet(50, 0, 50),
+		VGet(-500, -1, -500),
+		VGet(500, 0, 500),
 		GetColor(0, 255, 0),
 		GetColor(0, 255, 0),
 		TRUE

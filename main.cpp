@@ -25,12 +25,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetLightSpcColor(GetColorF(1.0f, 1.0f, 1.0f,255));
 
 	SetGlobalAmbientLight(GetColorF(0.4f, 0.4f, 0.4f,255));
+
 	while (ProcessMessage() == 0 && CheckHitKey(KEY_INPUT_ESCAPE) == 0) {
 		ClearDrawScreen();
 		input.Update();
 		manager.Update();
 		manager.Draw();
-		
+
 		ScreenFlip();
 		WaitTimer(16);
 	}

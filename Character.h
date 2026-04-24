@@ -42,6 +42,7 @@ class Player : public Character {
 
 	PlayerState m_state = PlayerState::Idle;
 	Angle angle = { 0.0f, 0.3f };
+	Angle C_angle = { 0.0f, 0.3f };
 public:
 	Player();
 	~Player();
@@ -62,14 +63,19 @@ public:
 	void ChangeModel(const ModelData& data);
 
 	Angle getAngle() { return angle; }
+
+	void GetAngle(Angle& a);
 };
 
 class Camela : public Character {
 	Player& p;
+	Angle camelaAngle = {0.0f, 0.3f };
 	float distance;
 public:
 	Camela(Player& p);
 	void Init()override;
 	void Update()override;
 	void Draw() override;
+
+	void MoveAngle();
 };
