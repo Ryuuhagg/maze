@@ -54,3 +54,11 @@ void Create::Update(SceneManager& manager) {
 void Create::Draw() {
 
 }
+
+void Option::Update(SceneManager& manager) {
+
+}
+
+void Option::Draw() {
+
+}
