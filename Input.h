@@ -19,6 +19,12 @@ class Input {
 	static float prevLX ;
 	static float prevLY ;
 
+	static int mouseNow;
+	static int mousePrev;
+
+	static int mouseX, mouseY;
+	static int prevMouseX, prevMouseY;
+
 public:
 	static void Update();
 	//押してる間発動
@@ -31,6 +37,17 @@ public:
 	static bool IsPadTrigger(int button){ return (padNow & button) && !(padPrev & button); }
 	//アクションをPADとキーボードで共通させる
 	static bool IsActionTrigger(Action action);
+
+	// 押している間
+	static bool IsMousePressed(int button) { return mouseNow & button; }
+	// 押した瞬間
+	static bool IsMouseTrigger(int button) { return (mouseNow & button) && !(mousePrev & button); }
+
+	static int GetMouseX() { return mouseX; }
+	static int GetMouseY() { return mouseY; }
+
+	static int GetMouseDeltaX() { return mouseX - prevMouseX; }
+	static int GetMouseDeltaY() { return mouseY - prevMouseY; }
 
 	//左スティック
 	static float GetPadLX();

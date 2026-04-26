@@ -3,10 +3,12 @@
 #include"SceneManager.h"
 #include"Character.h"
 #include"Input.h"
+#include"UI.h"
 #include"DxLib.h"
 using namespace std;
 Player p;
 Camela c(p);
+Button b({ 100,100 }, 0);
 void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "ƒ^ƒCƒgƒ‹‰æ–Ê",GetColor(255,255,255));
 }
@@ -55,10 +57,10 @@ void Create::Draw() {
 
 }
 
-void Option::Update(SceneManager& manager) {
-
+void OptionMenu::Update(SceneManager& manager) {
+	b.Update();
 }
 
-void Option::Draw() {
-
+void OptionMenu::Draw() {
+	b.Draw();
 }

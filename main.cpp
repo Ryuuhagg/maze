@@ -18,7 +18,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetDrawScreen(DX_SCREEN_BACK);
 	SceneManager manager;
 	Input input;
-	manager.ChangeScene(make_unique<Title>());
+	manager.ChangeScene(make_unique<OptionMenu>());
 	SetLightDirection(VGet(0.0f, -1.0f, 0.5f));
 
 	SetLightDifColor(GetColorF(1.0f, 1.0f, 1.0f,255));

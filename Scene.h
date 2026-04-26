@@ -28,7 +28,7 @@ public:
 	void Draw() override;
 };
 
-class Option : public Scene {
+class OptionMenu : public Scene {
 public:
 	void Update(SceneManager& maneger)override;
 	void Draw()override;

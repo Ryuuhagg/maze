@@ -11,6 +11,15 @@ int Input::padPrev = 0;
 float Input::prevLX = 0.0f;
 float Input::prevLY = 0.0f;
 
+int Input::mouseNow = 0;
+int Input::mousePrev = 0;
+
+int Input::mouseX = 0;
+int Input::mouseY = 0;
+
+int Input::prevMouseX = 0;
+int Input::prevMouseY = 0;
+
 Config Input::config;
 
 void Input::Update() {
@@ -22,15 +31,22 @@ void Input::Update() {
 
     prevLX = GetPadLX();
     prevLY = GetPadLY();
+
+    mousePrev = mouseNow;
+    mouseNow = GetMouseInput();
+
+    prevMouseX = mouseX;
+    prevMouseY = mouseY;
+    GetMousePoint(&mouseX, &mouseY);
 }
 
 bool Input::IsActionTrigger(Action action) {
     switch (action) {
     case Action::Confirm:
-        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm);
+        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm) || IsMouseTrigger(MOUSE_INPUT_LEFT);
 
     case Action::Cancel:
-        return IsKeyTrigger(config.KeyCancel) || IsPadTrigger(config.PadCancel);
+        return IsKeyTrigger(config.KeyCancel) || IsPadTrigger(config.PadCancel) || IsMouseTrigger(MOUSE_INPUT_RIGHT);
 
     case Action::Jump:
         return IsKeyTrigger(config.KeyJump) || IsPadTrigger(config.PadJump);
