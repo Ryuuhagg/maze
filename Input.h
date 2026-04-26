@@ -1,4 +1,5 @@
 #pragma once
+#include"Option.h"
 
 enum class Action {
 	Confirm,
@@ -7,11 +8,17 @@ enum class Action {
 };
 
 class Input {
+	static Config config;
+
 	static char now[256];
 	static char prev[256];
 
 	static int padNow;
 	static int padPrev;
+
+	static float prevLX ;
+	static float prevLY ;
+
 public:
 	static void Update();
 	//‰Ÿ‚µ‚Ä‚éŠÔ”­“®
@@ -39,4 +46,6 @@ public:
 	static float GetAxisRY();
 
 	static float ApplyDeadZone(float v);
+
+	static void SetConfig(const Config& cfg);
 };

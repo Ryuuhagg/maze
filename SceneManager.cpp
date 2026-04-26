@@ -1,4 +1,7 @@
 #include"SceneManager.h"
+
+
+
 void SceneManager::Update() {
 	if (!transition && next) {
 		current = std::move(next);

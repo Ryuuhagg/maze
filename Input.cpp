@@ -8,24 +8,32 @@ char Input::prev[256];
 int Input::padNow = 0;
 int Input::padPrev = 0;
 
+float Input::prevLX = 0.0f;
+float Input::prevLY = 0.0f;
+
+Config Input::config;
+
 void Input::Update() {
 	memcpy(prev, now, 256);
 	GetHitKeyStateAll(now);
 
 	padPrev = padNow;
 	padNow = GetJoypadInputState(DX_INPUT_PAD1);
+
+    prevLX = GetPadLX();
+    prevLY = GetPadLY();
 }
 
 bool Input::IsActionTrigger(Action action) {
     switch (action) {
     case Action::Confirm:
-        return IsKeyTrigger(KEY_INPUT_RETURN) || IsPadTrigger(PAD_INPUT_2);
+        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm);
 
     case Action::Cancel:
-        return IsKeyTrigger(KEY_INPUT_ESCAPE) || IsPadTrigger(PAD_INPUT_1);
+        return IsKeyTrigger(config.KeyCancel) || IsPadTrigger(config.PadCancel);
 
     case Action::Jump:
-        return IsKeyTrigger(KEY_INPUT_SPACE) || IsPadTrigger(PAD_INPUT_3);
+        return IsKeyTrigger(config.KeyJump) || IsPadTrigger(config.PadJump);
     }
     return false;
 }
@@ -133,4 +141,8 @@ float Input::GetAxisRY() {
 float Input::ApplyDeadZone(float v) {
     float dead = 0.2f;
     return (fabs(v) < dead) ? 0.0f : v;
+}
+
+void Input::SetConfig(const Config& cfg) {
+    config = cfg;
 }

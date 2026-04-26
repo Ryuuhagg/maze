@@ -1,6 +1,7 @@
 #pragma once
 #include"Scene.h"
 #include"Transition.h"
+#include"Option.h"
 #include<memory>
 using namespace std;
 class SceneManager {
