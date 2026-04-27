@@ -8,7 +8,9 @@
 using namespace std;
 Player p;
 Camela c(p);
-Button b({ 100,100 }, 0);
+Button b({ 100,100 }, 0,100,50);
+Toggle t({ 100,200 }, 0,100,50);
+Slider s({ 100,300 }, 100, 25);
 void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "ƒ^ƒCƒgƒ‹‰æ–Ê",GetColor(255,255,255));
 }
@@ -59,8 +61,12 @@ void Create::Draw() {
 
 void OptionMenu::Update(SceneManager& manager) {
 	b.Update();
+	t.Update();
+	s.Update();
 }
 
 void OptionMenu::Draw() {
 	b.Draw();
+	t.Draw();
+	s.Draw();
 }
