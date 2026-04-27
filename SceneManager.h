@@ -1,3 +1,4 @@
+//SceneManager.h
 #pragma once
 #include"Scene.h"
 #include"Transition.h"

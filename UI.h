@@ -1,3 +1,4 @@
+//UI.h
 #pragma once
 #include"Constant.h"
 
@@ -19,14 +20,19 @@ public:
 	UI(Pos pos, int c, int sizeX, int sizeY) : pos(pos), color(c), sizeX(sizeX),sizeY(sizeY){}
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
+
+	virtual bool IsUsing() { return false; }
 };
 
 class Button : public UI {
+	bool clicked;
 public:
 	Button(Pos pos, int c, int sizeX, int sizeY);
 	void Update() override;
 	void Draw() override;
 	bool IsClicked();
+
+	bool IsUsing()override;
 };
 
 class Toggle : public UI {
@@ -37,6 +43,7 @@ public:
 	void Draw() override;
 
 	bool IsClicked();
+	bool IsUsing()override;
 };
 
 class Slider : public UI {
@@ -49,4 +56,6 @@ public:
 	void Draw() override;
 
 	float GetValue() const { return value; }
+
+	bool IsUsing()override;
 };

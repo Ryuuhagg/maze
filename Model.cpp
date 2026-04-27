@@ -1,3 +1,4 @@
+//Model.cpp
 #include"Model.h"
 ModelData beaver = { "mv1Model/animal-beaver.mv1", 1, 2, 0 };
 ModelData cat = { "mv1Model/animal-cat.mv1", 1, 2, 0 };

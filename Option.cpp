@@ -1,3 +1,4 @@
+//Option.cpp
 #include"Option.h"
 #include"DxLib.h"
 #include<fstream>

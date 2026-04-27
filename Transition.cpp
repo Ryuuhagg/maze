@@ -1,3 +1,4 @@
+//Transition.cpp
 #include"DxLib.h"
 #include"Transition.h"
 #pragma region Fade

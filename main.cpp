@@ -1,3 +1,4 @@
+//main.cpp
 //メイン処理書く場所
 //ヒロシです。。。
 #include"DxLib.h"

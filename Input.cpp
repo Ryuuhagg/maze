@@ -1,3 +1,4 @@
+//Input.cpp
 #include"Input.h"
 #include"DxLib.h"
 #include <cmath>

@@ -1,3 +1,4 @@
+//UI.cpp
 #include"UI.h"
 #include"DxLib.h"
 #include"Input.h"
@@ -8,10 +9,11 @@ bool UI::IsMouseOver(int x, int y, int w, int h)
 		int my = Input::GetMouseY();
 		return (mx >= x && mx < x + w && my >= y && my <= y + h);
 }
-
-Button::Button(Pos pos, int c, int sizeX, int sizeY): UI(pos,c,sizeX,sizeY){}
+#pragma region Button
+Button::Button(Pos pos, int c, int sizeX, int sizeY): UI(pos,c,sizeX,sizeY),clicked(false){}
 
 void Button::Update() {
+	clicked = IsClicked();
 	bool hover = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
 	color = hover ? GetColor(200, 200, 255) : GetColor(150, 150, 255);
 	
@@ -19,7 +21,7 @@ void Button::Update() {
 
 void Button::Draw() {
 	DrawBox(pos.x, pos.y, pos.x + sizeX, pos.y + sizeY, color, true);
-	if (IsClicked()) {
+	if (clicked) {
 		DrawString(200, 100, "CLICKED!", GetColor(255, 0, 0));
 	}
 }
@@ -29,6 +31,11 @@ bool Button::IsClicked() {
 		&& Input::IsActionTrigger(Action::Confirm);
 }
 
+bool Button::IsUsing() {
+	return clicked;
+}
+#pragma endregion
+#pragma region Toggle
 Toggle::Toggle(Pos pos, int c, int sizeX, int sizeY) : UI(pos, c, sizeX, sizeY), isOn(false) {}
 
 void Toggle::Update() {
@@ -50,6 +57,11 @@ bool Toggle::IsClicked() {
 		&& Input::IsActionTrigger(Action::Confirm);
 }
 
+bool Toggle::IsUsing() {
+	return IsClicked();
+}
+#pragma endregion
+#pragma region Slider
 Slider::Slider(Pos pos, int w, int h):UI(pos, 0, w, h),dragging(false),value(1){}
 
 void Slider::Update() {
@@ -62,9 +74,9 @@ void Slider::Update() {
 	bool onKnob =
 		(mx >= knobX - 8 && mx <= knobX + 8 &&
 			my >= pos.y - 8 && my <= pos.y + sizeY + 8);
-
+	bool onBar = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
 	// 押したらドラッグ開始
-	if (Input::IsMousePressed(MOUSE_INPUT_LEFT) && onKnob) {
+	if (Input::IsMousePressed(MOUSE_INPUT_LEFT) && (onKnob || onBar)) {
 		dragging = true;
 	}
 
@@ -100,3 +112,8 @@ void Slider::Draw() {
 		knobX + 5, pos.y + sizeY + 5,
 		GetColor(255, 255, 255), TRUE);
 }
+
+bool Slider::IsUsing() {
+	return dragging;
+}
+#pragma endregion
