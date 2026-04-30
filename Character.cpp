@@ -174,6 +174,22 @@ void Camela::Init() {
 
 void Camela::Update() {
     p.GetAngle(camelaAngle);
+    VECTOR camPos = VGet(
+        p.getVECTOR().x - sinf(camelaAngle.x) * distance,
+        p.getVECTOR().y + sinf(camelaAngle.y) * distance,
+        p.getVECTOR().z - cosf(camelaAngle.x) * distance
+    );
+    SetLightPosition(camPos);
+
+    VECTOR target = p.getVECTOR();
+    VECTOR dir = VSub(target, camPos);
+
+    // ê≥ãKâª
+    float len = sqrtf(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+    dir = VGet(dir.x / len, dir.y / len, dir.z / len);
+
+    SetLightDirection(dir);
+
     SetCameraPositionAndTarget_UpVecY(
         VGet(
           p.getVECTOR().x - sinf(camelaAngle.x) * distance

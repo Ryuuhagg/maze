@@ -22,7 +22,12 @@
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MapEditor.cpp" />
+    <ClCompile Include="MapIO.cpp" />
     <ClCompile Include="MapLoader.cpp" />
+    <ClCompile Include="MapUI.cpp" />
+    <ClCompile Include="MapUndo.cpp" />
+    <ClCompile Include="MapWall.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Option.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -37,6 +42,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="MapData.h" />
+    <ClInclude Include="MapEditor.h" />
     <ClInclude Include="MapLoader.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Option.h" />

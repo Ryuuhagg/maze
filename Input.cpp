@@ -25,7 +25,7 @@ Config Input::config;
 
 void Input::Update() {
 	memcpy(prev, now, 256);
-	GetHitKeyStateAll(now);
+    GetHitKeyStateAll(now);
 
 	padPrev = padNow;
 	padNow = GetJoypadInputState(DX_INPUT_PAD1);

@@ -8,9 +8,18 @@
 #include"UI.h"
 #include"UIManager.h"
 #include"DxLib.h"
+#include"MapEditor.h"
 using namespace std;
 Player p;
 Camela c(p);
+
+Title::Title() {
+	Init();
+}
+
+void Title::Init() {
+
+}
 
 void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "タイトル画面",GetColor(255,255,255));
@@ -23,6 +32,7 @@ void Title::Update(SceneManager& manager) {
 		);
 	}
 }
+
 Game::Game() {
 	Init();
 }
@@ -38,6 +48,7 @@ void Game::Draw() {
 	DrawGameMap();
 
 }
+
 void Game::Update(SceneManager& manager) {
 	p.Update();
 	c.Update();   
@@ -46,6 +57,15 @@ void Game::Update(SceneManager& manager) {
 	}
 	UpdateGameMap();
 }
+
+Result::Result() {
+	Init();
+}
+
+void Result::Init() {
+
+}
+
 void Result::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "リザルト画面", GetColor(255, 255, 255));
 }
@@ -55,12 +75,20 @@ void Result::Update(SceneManager& manager) {
 	}
 }
 
-void Create::Update(SceneManager& manager) {
+Create::Create() {
+	Init();
+}
 
+void Create::Init() {
+	InitEditor();
+}
+
+void Create::Update(SceneManager& manager) {
+	UpdateEditor();
 }
 
 void Create::Draw() {
-
+	DrawEditor();
 }
 
 OptionMenu::OptionMenu() {
