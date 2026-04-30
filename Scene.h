@@ -1,6 +1,8 @@
 //Scene.h
 #pragma once
+#include"UIManager.h"
 class SceneManager;
+
 class Scene {
 public:
 	virtual void Update(SceneManager& manager) = 0;
@@ -14,6 +16,8 @@ public:
 };
 class Game :public Scene {
 public:
+	Game();
+	void Init();
 	void Update(SceneManager& manager) override;
 	void Draw() override;
 };
@@ -30,7 +34,10 @@ public:
 };
 
 class OptionMenu : public Scene {
+	UIManager uiManager;
 public:
+	OptionMenu();
+	void Init();
 	void Update(SceneManager& maneger)override;
 	void Draw()override;
 };

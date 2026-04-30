@@ -44,10 +44,10 @@ void Input::Update() {
 bool Input::IsActionTrigger(Action action) {
     switch (action) {
     case Action::Confirm:
-        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm) || IsMouseTrigger(MOUSE_INPUT_LEFT);
+        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm);
 
     case Action::Cancel:
-        return IsKeyTrigger(config.KeyCancel) || IsPadTrigger(config.PadCancel) || IsMouseTrigger(MOUSE_INPUT_RIGHT);
+        return IsKeyTrigger(config.KeyCancel) || IsPadTrigger(config.PadCancel);
 
     case Action::Jump:
         return IsKeyTrigger(config.KeyJump) || IsPadTrigger(config.PadJump);

@@ -34,6 +34,7 @@
     <ClInclude Include="Character.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Option.h" />
     <ClInclude Include="Scene.h" />

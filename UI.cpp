@@ -10,39 +10,46 @@ bool UI::IsMouseOver(int x, int y, int w, int h)
 		return (mx >= x && mx < x + w && my >= y && my <= y + h);
 }
 #pragma region Button
-Button::Button(Pos pos, int c, int sizeX, int sizeY): UI(pos,c,sizeX,sizeY),clicked(false){}
+Button::Button(Pos pos, int sizeX, int sizeY): UI(pos,0,sizeX,sizeY),clicked(false){}
 
 void Button::Update() {
 	clicked = IsClicked();
+
+	if (clicked && onClick) { 
+		onClick();
+	}
+
 	bool hover = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
 	color = hover ? GetColor(200, 200, 255) : GetColor(150, 150, 255);
-	
 }
 
 void Button::Draw() {
 	DrawBox(pos.x, pos.y, pos.x + sizeX, pos.y + sizeY, color, true);
-	if (clicked) {
-		DrawString(200, 100, "CLICKED!", GetColor(255, 0, 0));
-	}
 }
 
 bool Button::IsClicked() {
 	return IsMouseOver(pos.x, pos.y, sizeX, sizeY)
-		&& Input::IsActionTrigger(Action::Confirm);
+		&& Input::IsMouseTrigger(MOUSE_INPUT_LEFT);
 }
 
 bool Button::IsUsing() {
 	return clicked;
 }
+
+void Button::SetOnClick(std::function<void()> func) {
+	onClick = func;
+}
 #pragma endregion
 #pragma region Toggle
-Toggle::Toggle(Pos pos, int c, int sizeX, int sizeY) : UI(pos, c, sizeX, sizeY), isOn(false) {}
+Toggle::Toggle(Pos pos, int sizeX, int sizeY) : UI(pos, 0, sizeX, sizeY), isOn(false),usingNow(false) {}
 
 void Toggle::Update() {
+	usingNow = false;
 	bool hover = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
 	color = hover ? GetColor(200, 200, 255) : GetColor(150, 150, 255);
 	if (IsClicked()) {
 		isOn = !isOn;
+		usingNow = true;
 	}
 }
 
@@ -54,15 +61,15 @@ void Toggle::Draw() {
 
 bool Toggle::IsClicked() {
 	return IsMouseOver(pos.x, pos.y, sizeX, sizeY)
-		&& Input::IsActionTrigger(Action::Confirm);
+		&& Input::IsMouseTrigger(MOUSE_INPUT_LEFT);
 }
 
 bool Toggle::IsUsing() {
-	return IsClicked();
+	return usingNow;
 }
 #pragma endregion
 #pragma region Slider
-Slider::Slider(Pos pos, int w, int h):UI(pos, 0, w, h),dragging(false),value(1){}
+Slider::Slider(Pos pos, int w, int h):UI(pos, 0, w, h),dragging(false),value(0.5f){}
 
 void Slider::Update() {
 	int mx = Input::GetMouseX();
@@ -76,7 +83,7 @@ void Slider::Update() {
 			my >= pos.y - 8 && my <= pos.y + sizeY + 8);
 	bool onBar = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
 	// 押したらドラッグ開始
-	if (Input::IsMousePressed(MOUSE_INPUT_LEFT) && (onKnob || onBar)) {
+	if (Input::IsMouseTrigger(MOUSE_INPUT_LEFT) && (onKnob || onBar)) {
 		dragging = true;
 	}
 

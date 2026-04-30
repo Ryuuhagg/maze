@@ -1,7 +1,7 @@
 //UI.h
 #pragma once
 #include"Constant.h"
-
+#include<functional>
 struct Pos {
 	int x;
 	int y;
@@ -22,23 +22,29 @@ public:
 	virtual void Draw() = 0;
 
 	virtual bool IsUsing() { return false; }
+	virtual void OnClick(){}
 };
 
 class Button : public UI {
 	bool clicked;
+
+	std::function<void()> onClick;
 public:
-	Button(Pos pos, int c, int sizeX, int sizeY);
+	Button(Pos pos, int sizeX, int sizeY);
 	void Update() override;
 	void Draw() override;
 	bool IsClicked();
 
 	bool IsUsing()override;
+
+	void SetOnClick(std::function<void()> func);
 };
 
 class Toggle : public UI {
 	bool isOn = false;
+	bool usingNow = false;
 public:
-	Toggle(Pos pos, int c, int sizeX, int sizeY);
+	Toggle(Pos pos, int sizeX, int sizeY);
 	void Update() override;
 	void Draw() override;
 
