@@ -22,6 +22,7 @@
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MapLoader.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Option.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -35,6 +36,8 @@
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="MapData.h" />
+    <ClInclude Include="MapLoader.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Option.h" />
     <ClInclude Include="Scene.h" />

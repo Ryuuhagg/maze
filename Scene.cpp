@@ -2,6 +2,7 @@
 #include"Scene.h"
 #include"Constant.h"
 #include"SceneManager.h"
+#include"MapLoader.h"
 #include"Character.h"
 #include"Input.h"
 #include"UI.h"
@@ -17,7 +18,7 @@ void Title::Draw() {
 void Title::Update(SceneManager& manager) {
 	if (Input::IsActionTrigger(Action::Confirm)) {
 		manager.ChangeScene(
-			make_unique<OptionMenu>(), 
+			make_unique<Game>(), 
 			make_unique<Slide>()
 		);
 	}
@@ -27,20 +28,15 @@ Game::Game() {
 }
 
 void Game::Init() {
+	InitGameMap();
 	p.Init();
 }
 
 void Game::Draw() {
 	p.Draw();
 	DrawString(WIDTH / 2, HEIGHT-550, "ÉQÅ[ÉÄâÊñ ", GetColor(255, 255, 255));
+	DrawGameMap();
 
-	DrawCube3D(
-		VGet(-500, -1, -500),
-		VGet(500, 0, 500),
-		GetColor(0, 255, 0),
-		GetColor(0, 255, 0),
-		TRUE
-	);
 }
 void Game::Update(SceneManager& manager) {
 	p.Update();
@@ -48,6 +44,7 @@ void Game::Update(SceneManager& manager) {
 	if (Input::IsActionTrigger(Action::Confirm)) {
 		manager.ChangeScene(make_unique<Result>(), make_unique<Fade>());
 	}
+	UpdateGameMap();
 }
 void Result::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "ÉäÉUÉãÉgâÊñ ", GetColor(255, 255, 255));

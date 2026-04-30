@@ -4,7 +4,8 @@
 #include"Constant.h"
 #include<math.h>
 #include <algorithm>
-Player::Player():Character(1)
+#include"MapLoader.h"
+Player::Player():Character(10)
 {
     Init();
 }
@@ -16,9 +17,9 @@ Player::~Player() {
 void Player::Init() {
     ChangeModel(cat);
 
-    MV1SetScale(m_model, VGet(0.05f, 0.05f, 0.05f));
+    MV1SetScale(m_model, VGet(0.5f, 0.5f, 0.5f));
 
-    pos = VGet(0, 0, 0);
+    pos = GetStartPosition();
     y = 0;
     vy = 0;
     isGround = true;
@@ -162,7 +163,7 @@ void Player::ChangeModel(const ModelData& data) {
 
 void Player::GetAngle(Angle& a) { C_angle = a; }
 
-Camela::Camela(Player& p) :Character(0),p(p),distance(60)
+Camela::Camela(Player& p) :Character(0),p(p),distance(180)
 {
     Init();
 }
