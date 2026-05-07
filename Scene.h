@@ -1,6 +1,8 @@
 //Scene.h
 #pragma once
 #include"UIManager.h"
+#include"Option.h"
+#include"Input.h"
 class SceneManager;
 
 class Scene {
@@ -42,6 +44,9 @@ public:
 
 class OptionMenu : public Scene {
 	UIManager uiManager;
+	Config config;
+	Option option;
+	bool goBack = false;
 public:
 	OptionMenu();
 	void Init()override;

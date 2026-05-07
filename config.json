@@ -1,0 +1,13 @@
+{
+    "BGMVolume": 50,
+    "CamelaRightLeftFlip": false,
+    "CamelaUpDownFlip": false,
+    "KeyCancel": "ESC",
+    "KeyConfirm": "ENTER",
+    "KeyJump": "SPACE",
+    "PadCancel": "A",
+    "PadConfirm": "B",
+    "PadJump": "X",
+    "SEVolume": 50,
+    "masterVolume": 50
+}

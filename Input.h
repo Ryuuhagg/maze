@@ -5,7 +5,11 @@
 enum class Action {
 	Confirm,
 	Cancel,
-	Jump
+	Jump,
+	Up,
+	Down,
+	Left,
+	Right
 };
 
 class Input {
@@ -44,6 +48,10 @@ public:
 	// âüÇµÇΩèuä‘
 	static bool IsMouseTrigger(int button) { return (mouseNow & button) && !(mousePrev & button); }
 
+	static bool IsMouseMoved() {
+		return mouseX != prevMouseX || mouseY != prevMouseY;
+	}
+
 	static int GetMouseX() { return mouseX; }
 	static int GetMouseY() { return mouseY; }
 
@@ -66,4 +74,7 @@ public:
 	static float ApplyDeadZone(float v);
 
 	static void SetConfig(const Config& cfg);
+
+	static int GetAnyKeyTrigger();
+	static int GetAnyPadTrigger();
 };

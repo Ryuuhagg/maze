@@ -1,34 +1,49 @@
 //UI.cpp
 #include"UI.h"
 #include"DxLib.h"
+#include"Option.h"
 #include"Input.h"
 
-bool UI::IsMouseOver(int x, int y, int w, int h)
+bool UI::IsMouseOver(int x, int y, int w, int h, int offsetY)
 {
-		int mx = Input::GetMouseX();
-		int my = Input::GetMouseY();
-		return (mx >= x && mx < x + w && my >= y && my <= y + h);
+	int mx = Input::GetMouseX();
+	int my = Input::GetMouseY();
+
+	int drawY = y - offsetY;
+
+	return (mx >= x && mx < x + w &&
+		my >= drawY && my <= drawY + h);
 }
 #pragma region Button
 Button::Button(Pos pos, int sizeX, int sizeY): UI(pos,0,sizeX,sizeY),clicked(false){}
 
-void Button::Update() {
-	clicked = IsClicked();
+void Button::Update(int offsetY) {
+	clicked = IsClicked(offsetY);
 
 	if (clicked && onClick) { 
 		onClick();
 	}
 
-	bool hover = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
+	bool hover = IsMouseOver(pos.x, pos.y , sizeX, sizeY, offsetY);
 	color = hover ? GetColor(200, 200, 255) : GetColor(150, 150, 255);
 }
 
-void Button::Draw() {
-	DrawBox(pos.x, pos.y, pos.x + sizeX, pos.y + sizeY, color, true);
+void Button::Draw(int offsetY) {
+	int drawColor = isFocused
+		? GetColor(255, 255, 0)  
+		: color;
+
+	DrawBox
+		(pos.x
+		, pos.y - offsetY
+		, pos.x + sizeX
+		, pos.y + sizeY - offsetY
+		, drawColor, true
+		);
 }
 
-bool Button::IsClicked() {
-	return IsMouseOver(pos.x, pos.y, sizeX, sizeY)
+bool Button::IsClicked(int offsetY) {
+	return IsMouseOver(pos.x, pos.y, sizeX, sizeY, offsetY)
 		&& Input::IsMouseTrigger(MOUSE_INPUT_LEFT);
 }
 
@@ -39,28 +54,49 @@ bool Button::IsUsing() {
 void Button::SetOnClick(std::function<void()> func) {
 	onClick = func;
 }
+
+void Button::OnClick() {
+	if (onClick) onClick();
+}
 #pragma endregion
 #pragma region Toggle
 Toggle::Toggle(Pos pos, int sizeX, int sizeY) : UI(pos, 0, sizeX, sizeY), isOn(false),usingNow(false) {}
 
-void Toggle::Update() {
+void Toggle::Update(int offsetY) {
 	usingNow = false;
-	bool hover = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
+	bool hover = IsMouseOver(pos.x, pos.y , sizeX, sizeY ,offsetY);
 	color = hover ? GetColor(200, 200, 255) : GetColor(150, 150, 255);
-	if (IsClicked()) {
+	if (IsClicked(offsetY)) {
 		isOn = !isOn;
 		usingNow = true;
 	}
 }
 
-void Toggle::Draw() {
-	int drawColor = isOn ? GetColor(100, 255, 100) : GetColor(255, 100, 100);
+void Toggle::Draw(int offsetY) {
+	color = isOn ? GetColor(100, 255, 100) : GetColor(255, 100, 100);
 
-	DrawBox(pos.x, pos.y, pos.x + sizeX, pos.y + sizeY, drawColor, TRUE);
+	int drawColor = isFocused
+		? GetColor(255, 255, 0)
+		: color;
+
+	DrawBox(pos.x
+		, pos.y - offsetY
+		, pos.x + sizeX
+		, pos.y + sizeY - offsetY
+		, drawColor
+		, true
+	);
+
+	const char* state = isOn ? "ON" : "OFF";
+	DrawString(pos.x + 10, pos.y - offsetY + 5, state, GetColor(0, 0, 0));
 }
 
-bool Toggle::IsClicked() {
-	return IsMouseOver(pos.x, pos.y, sizeX, sizeY)
+void Toggle::OnClick() {
+	isOn = !isOn;
+}
+
+bool Toggle::IsClicked(int offsetY) {
+	return IsMouseOver(pos.x, pos.y, sizeX, sizeY, offsetY)
 		&& Input::IsMouseTrigger(MOUSE_INPUT_LEFT);
 }
 
@@ -69,54 +105,74 @@ bool Toggle::IsUsing() {
 }
 #pragma endregion
 #pragma region Slider
-Slider::Slider(Pos pos, int w, int h):UI(pos, 0, w, h),dragging(false),value(0.5f){}
+Slider::Slider(Pos pos, int w, int h):UI(pos, GetColor(200,200,200), w, h), dragging(false), value(0.5f) {}
 
-void Slider::Update() {
+void Slider::Update(int offsetY) {
 	int mx = Input::GetMouseX();
 	int my = Input::GetMouseY();
 
+	int drawY = pos.y - offsetY;
 	int knobX = pos.x + (int)(value * sizeX);
 
-	// ノブにマウスがあるか
 	bool onKnob =
 		(mx >= knobX - 8 && mx <= knobX + 8 &&
-			my >= pos.y - 8 && my <= pos.y + sizeY + 8);
-	bool onBar = IsMouseOver(pos.x, pos.y, sizeX, sizeY);
-	// 押したらドラッグ開始
+			my >= drawY - 8 && my <= drawY + sizeY + 8);
+
+	bool onBar =
+		(mx >= pos.x && mx <= pos.x + sizeX &&
+			my >= drawY && my <= drawY + sizeY);
+
 	if (Input::IsMouseTrigger(MOUSE_INPUT_LEFT) && (onKnob || onBar)) {
 		dragging = true;
 	}
 
-	// 離したら終了
 	if (!Input::IsMousePressed(MOUSE_INPUT_LEFT)) {
 		dragging = false;
 	}
 
-	// ドラッグ中なら値更新
+	if (isFocused) {
+		if (Input::IsKeyTrigger(KEY_INPUT_RIGHT)) {
+			value += 0.05f;
+		}
+		if (Input::IsKeyTrigger(KEY_INPUT_LEFT)) {
+			value -= 0.05f;
+		}
+
+		if (value < 0) value = 0;
+		if (value > 1) value = 1;
+	}
+
 	if (dragging) {
 		value = (float)(mx - pos.x) / sizeX;
-
 		if (value < 0.0f) value = 0.0f;
 		if (value > 1.0f) value = 1.0f;
 	}
 }
 
-void Slider::Draw() {
+void Slider::Draw(int offsetY) {
 	// ノブ位置
 	int knobX = pos.x + (int)(value * sizeX);
 
-	// バー
-	DrawBox(pos.x, pos.y,
-		knobX, pos.y + sizeY,
-		GetColor(200, 200, 200), TRUE);
+	int drawColor = isFocused
+		? GetColor(255, 255, 0)
+		: color;
 
-	DrawBox(knobX, pos.y,
-		pos.x + sizeX, pos.y + sizeY,
-		GetColor(100, 100, 100), TRUE);
+	// バー
+	DrawBox(pos.x
+		, pos.y - offsetY
+		,knobX
+		, pos.y + sizeY - offsetY
+		, drawColor
+		, TRUE
+	);
+
+	DrawBox(knobX, pos.y - offsetY,
+		pos.x + sizeX, pos.y + sizeY - offsetY,
+		drawColor, TRUE);
 
 	// ノブ
-	DrawBox(knobX - 5, pos.y - 5,
-		knobX + 5, pos.y + sizeY + 5,
+	DrawBox(knobX - 5, pos.y - 5 - offsetY,
+		knobX + 5, pos.y + sizeY + 5 - offsetY,
 		GetColor(255, 255, 255), TRUE);
 }
 
@@ -124,3 +180,49 @@ bool Slider::IsUsing() {
 	return dragging;
 }
 #pragma endregion
+
+KeyBindButton::KeyBindButton(Pos pos, int w, int h, int* keyPtr)
+	: UI(pos, GetColor(150, 150, 255), w, h), targetKey(keyPtr) {}
+
+void KeyBindButton::Update(int offsetY) {
+	if (IsMouseOver(pos.x, pos.y , sizeX, sizeY, offsetY) &&
+		Input::IsMouseTrigger(MOUSE_INPUT_LEFT)) {
+		waitingInput = true;
+	}
+
+	if (waitingInput) {
+		int key = Input::GetAnyKeyTrigger(); 
+
+		if (key != -1) {
+			*targetKey = key;
+			waitingInput = false;
+		}
+	}
+}
+
+void KeyBindButton::Draw(int offsetY){
+	int drawColor = isFocused
+		? GetColor(255, 255, 0)
+		: color;
+
+	DrawBox(pos.x, pos.y - offsetY, pos.x + sizeX, pos.y + sizeY - offsetY,
+		drawColor, TRUE);
+
+	if (waitingInput) {
+		DrawString(pos.x, pos.y - offsetY, "Press Key...", GetColor(255, 255, 255));
+	}
+}
+
+void KeyBindButton::OnClick() {
+	waitingInput = true;
+}
+
+Label::Label(Pos pos, int sizeX, int sizeY, string text, int color) : UI(pos, color, sizeX, sizeY), text(text) {}
+
+void Label::Update(int offsetY) {
+
+}
+
+void Label::Draw(int offsetY) {
+	DrawString(pos.x, pos.y - offsetY, text.c_str(), color);
+}

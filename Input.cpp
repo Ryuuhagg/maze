@@ -51,6 +51,12 @@ bool Input::IsActionTrigger(Action action) {
 
     case Action::Jump:
         return IsKeyTrigger(config.KeyJump) || IsPadTrigger(config.PadJump);
+
+    case Action::Up:
+        return IsKeyTrigger(KEY_INPUT_W) || IsKeyTrigger(KEY_INPUT_UP);
+
+    case Action::Down:
+        return IsKeyTrigger(KEY_INPUT_S)||IsKeyTrigger(KEY_INPUT_DOWN);
     }
     return false;
 }
@@ -162,4 +168,23 @@ float Input::ApplyDeadZone(float v) {
 
 void Input::SetConfig(const Config& cfg) {
     config = cfg;
+}
+
+int Input::GetAnyKeyTrigger() {
+    for (int i = 0; i < 256; i++) {
+        if (now[i] && !prev[i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int Input::GetAnyPadTrigger() {
+    int pad = GetJoypadInputState(DX_INPUT_PAD1);
+
+    int diff = pad & (~padPrev);
+
+    if (diff) return diff;
+
+    return -1;
 }

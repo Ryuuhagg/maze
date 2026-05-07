@@ -96,46 +96,109 @@ OptionMenu::OptionMenu() {
 }
 
 void OptionMenu::Init() {
-	auto button = make_shared<Button>(
-		Pos{ 100,100 },
-		200, 50
-	);
+	goBack = false;
 
-	button->SetOnClick([this]() {
-		printfDx("押された\n");
-		});
+	option.LoadOption(config);
 
-	auto BGMslider = make_shared<Slider>(
-		Pos{ 100,200 },
-		200, 30
-	);
+	int x = 100;
+	int y = 100;
+	int line = 60;
 
-	auto SEslider = make_shared<Slider>(
-		Pos{ 100,300 },
-		200, 30
-	);
+	auto Title_text = make_shared<Label>(Pos{ 100,100 }, 0, 0, "OPTION", WHITE);
 
-	auto toggle = make_shared<Toggle>(
-		Pos{ 100,400 },
-		200, 50
-	);
+	// --- Audio ---
+	auto master_text = make_shared<Label>(Pos{ x , y + line * 1 }, 0, 0, "Master Volume", WHITE);
+	auto master = make_shared<Slider>(Pos{ x + 200, y + line * 1 }, 300, 20);
 
-	uiManager.Add(button);
-	uiManager.Add(BGMslider);
-	uiManager.Add(SEslider);
-	uiManager.Add(toggle);
+	auto bgm_text = make_shared<Label>(Pos{ x , y + line * 2 }, 0, 0, "BGM Volume", WHITE);
+	auto bgm = make_shared<Slider>(Pos{ x + 200, y + line * 2 }, 300, 20);
+
+	auto se_text = make_shared<Label>(Pos{ x , y + line * 3 }, 0, 0, "SE Volume", WHITE);
+	auto se = make_shared<Slider>(Pos{ x + 200, y + line * 3 }, 300, 20);
+
+
+	// 初期値反映
+	master->SetValue(config.masterVolume / 100.0f);
+	bgm->SetValue(config.BGMVolume / 100.0f);
+	se->SetValue(config.SEVolume / 100.0f);
+
+	// --- Camera ---
+	auto invertY = make_shared<Toggle>(Pos{ x + 200, y + line * 5 }, 50, 30);
+	auto invertX = make_shared<Toggle>(Pos{ x + 200, y + line * 6 }, 50, 30);
+
+	auto invertY_text = make_shared<Label>(Pos{ x , y + line * 5 }, 0, 0, "Invert Y", WHITE);
+	auto invertX_text = make_shared<Label>(Pos{ x , y + line * 6 }, 0, 0, "Invert X", WHITE);
+
+	invertY->Set(config.CamelaUpDownFlip);
+	invertX->Set(config.CamelaRightLeftFlip);
+
+	// --- Saveボタン ---
+	auto saveBtn = make_shared<Button>(Pos{ x + 100, y + line * 8 }, 150, 50);
+	saveBtn->SetOnClick([this, master, bgm, se, invertY, invertX]() {
+
+		config.masterVolume = (int)(master->GetValue() * 100);
+		config.BGMVolume = (int)(bgm->GetValue() * 100);
+		config.SEVolume = (int)(se->GetValue() * 100);
+
+		config.CamelaUpDownFlip = invertY->Get();
+		config.CamelaRightLeftFlip = invertX->Get();
+
+		option.SaveOption(config);
+
+		printfDx("Saved!\n");
+	});
+
+	auto save_text = make_shared<Label>(Pos{ x + 150, y + line * 8 + 20 }, 0, 0, "Save", WHITE);
+
+	// --- Backボタン ---
+	auto backBtn = make_shared<Button>(Pos{ x + 300, y + line * 8 }, 150, 50);
+	backBtn->SetOnClick([this]() {
+		goBack = true;
+	});
+
+	auto back_text = make_shared<Label>(Pos{ x + 350, y + line * 8 + 20 }, 0, 0, "Back", WHITE);
+
+	uiManager.Add(Title_text);
+
+	uiManager.Add(master_text);
+	uiManager.Add(master);
+
+	uiManager.Add(bgm_text);
+	uiManager.Add(bgm);
+
+	uiManager.Add(se_text);
+	uiManager.Add(se);
+
+	uiManager.Add(invertY);
+	uiManager.Add(invertX);
+
+	uiManager.Add(invertY_text);
+	uiManager.Add(invertX_text);
+
+	uiManager.Add(saveBtn);
+	uiManager.Add(save_text);
+
+	uiManager.Add(backBtn);
+	uiManager.Add(back_text);
 }
 
 void OptionMenu::Update(SceneManager& manager) {
-	if (Input::IsActionTrigger(Action::Confirm)) {
+	if (goBack) {
 		manager.ChangeScene(
 			make_unique<Title>(),
 			make_unique<Slide>()
 		);
 	}
+
 	uiManager.Update();
 }
 
 void OptionMenu::Draw() {
+	int x = 100;
+	int y = 100;
+	int line = 60;
+
+	int offset = uiManager.GetScrollY();
+
 	uiManager.Draw();
 }

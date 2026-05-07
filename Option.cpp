@@ -44,9 +44,13 @@ unordered_map<int, string> keyToString = {
 	{KEY_INPUT_RIGHT, "RIGHT"}
 };
 
-int StringToKeySafe(string s) {
-	s = ToUpper(s);
-	return stringToKey.count(s) ? stringToKey[s] : KEY_INPUT_SPACE;
+int StringToKeySafe(const string& s) {
+	string upper = ToUpper(s);
+	return stringToKey.count(upper) ? stringToKey[upper] : KEY_INPUT_SPACE;
+}
+
+string KeyToStringSafe(int key) {
+	return keyToString.count(key) ? keyToString[key] : "UNKNOWN";
 }
 #pragma endregion
 #pragma region Pad
@@ -72,9 +76,13 @@ unordered_map<int, string> PadToString = {
 	{PAD_INPUT_8, "RT"}
 };
 
-int StringToPadSafe(string s) {
-	s = ToUpper(s);
-	return stringToPad.count(s) ? stringToKey[s] : PAD_INPUT_1;
+int StringToPadSafe(const string& s) {
+	string upper = ToUpper(s);
+	return stringToPad.count(upper) ? stringToPad[upper] : PAD_INPUT_1;
+}
+
+string PadToStringSafe(int pad) {
+	return PadToString.count(pad) ? PadToString[pad] : "UNKNOWN";
 }
 #pragma endregion
 
@@ -89,14 +97,14 @@ void Option::SaveOption(const Config& config) {
 	j["CamelaUpDownFlip"] = config.CamelaUpDownFlip;
 	j["CamelaRightLeftFlip"] = config.CamelaRightLeftFlip;
 
-	j["KeyJump"] = keyToString[config.KeyJump];
-	j["PadJump"] = PadToString[config.PadJump];
+	j["KeyJump"] = KeyToStringSafe(config.KeyJump);
+	j["PadJump"] = PadToStringSafe(config.PadJump);
 
-	j["KeyConfirm"] = keyToString[config.KeyConfirm];
-	j["PadConfirm"] = PadToString[config.PadConfirm];
+	j["KeyConfirm"] = KeyToStringSafe(config.KeyConfirm);
+	j["PadConfirm"] = PadToStringSafe(config.PadConfirm);
 
-	j["KeyCancel"] = keyToString[config.KeyCancel];
-	j["PadCancel"] = PadToString[config.PadCancel];
+	j["KeyCancel"] = KeyToStringSafe(config.KeyCancel);
+	j["PadCancel"] = PadToStringSafe(config.PadCancel);
 
 	ofstream file("config.json");
 	if (file) {
