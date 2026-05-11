@@ -94,6 +94,7 @@ public:
 
 class KeyBindButton : public UI {
 	bool waitingInput = false;
+	bool just = false;
 	int* targetKey; // Config‚ÌƒL[‚ğ’¼Úw‚·
 
 public:
@@ -104,12 +105,15 @@ public:
 	void Draw(int offsetY)  override;
 
 	void OnClick()override;
+
+	string GetKeyName() const;
 };
 
 class Label : public UI {
 	string text;
+	int fontSize;
 public:
-	Label(Pos pos, int sizeX, int sizeY, string text, int color);
+	Label(Pos pos, int sizeX, int sizeY, string text, int color, int fontSize = 16);
 	void Update(int offsetY)override;
 	void Draw(int offsetY) override;
 

@@ -1,5 +1,14 @@
 //SceneManager.cpp
 #include"SceneManager.h"
+#include"FontManager.h"
+
+SceneManager::SceneManager() {
+	FontManager::Init();
+}
+
+SceneManager::~SceneManager() {
+	FontManager::End();
+}
 
 void SceneManager::Update() {
 	if (!transition && next) {

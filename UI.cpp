@@ -3,6 +3,8 @@
 #include"DxLib.h"
 #include"Option.h"
 #include"Input.h"
+#include"FontManager.h"
+#include"Option.h"
 
 bool UI::IsMouseOver(int x, int y, int w, int h, int offsetY)
 {
@@ -188,12 +190,22 @@ void KeyBindButton::Update(int offsetY) {
 	if (IsMouseOver(pos.x, pos.y , sizeX, sizeY, offsetY) &&
 		Input::IsMouseTrigger(MOUSE_INPUT_LEFT)) {
 		waitingInput = true;
+		just = true;
 	}
 
 	if (waitingInput) {
+		if (just) {
+			just = false;
+			return;
+		}
+
 		int key = Input::GetAnyKeyTrigger(); 
 
 		if (key != -1) {
+			if (!Input::IsValidBindKey(key)) {
+				return;
+			}
+
 			*targetKey = key;
 			waitingInput = false;
 		}
@@ -208,21 +220,39 @@ void KeyBindButton::Draw(int offsetY){
 	DrawBox(pos.x, pos.y - offsetY, pos.x + sizeX, pos.y + sizeY - offsetY,
 		drawColor, TRUE);
 
+	string text;
+
 	if (waitingInput) {
-		DrawString(pos.x, pos.y - offsetY, "Press Key...", GetColor(255, 255, 255));
+		text = "Press Key...";
 	}
+	else {
+		text = GetKeyName();
+	}
+
+	DrawString(
+		pos.x + 10,
+		pos.y + 10 - offsetY,
+		text.c_str(),
+		BLACK
+	);
 }
 
 void KeyBindButton::OnClick() {
 	waitingInput = true;
+	just = true;
 }
 
-Label::Label(Pos pos, int sizeX, int sizeY, string text, int color) : UI(pos, color, sizeX, sizeY), text(text) {}
+string KeyBindButton::GetKeyName() const {
+	return KeyToStringSafe(*targetKey);
+}
+
+
+Label::Label(Pos pos, int sizeX, int sizeY, string text, int color, int fontSize) : UI(pos, color, sizeX, sizeY), text(text), fontSize(fontSize) {}
 
 void Label::Update(int offsetY) {
 
 }
 
 void Label::Draw(int offsetY) {
-	DrawString(pos.x, pos.y - offsetY, text.c_str(), color);
+	DrawStringToHandle(pos.x, pos.y - offsetY, text.c_str(), color, FontManager::Get(fontSize));
 }

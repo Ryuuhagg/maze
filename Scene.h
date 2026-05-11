@@ -13,6 +13,10 @@ public:
 };
 
 class Title :public Scene {
+	Config config;
+	Option option;
+
+	bool first;
 public:
 	Title();
 	void Init() override;

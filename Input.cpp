@@ -40,11 +40,11 @@ void Input::Update() {
     prevMouseY = mouseY;
     GetMousePoint(&mouseX, &mouseY);
 }
-
+//アクションごとにキーを決定
 bool Input::IsActionTrigger(Action action) {
     switch (action) {
     case Action::Confirm:
-        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm) || IsKeyTrigger(KEY_INPUT_RETURN);
+        return IsKeyTrigger(config.KeyConfirm) || IsPadTrigger(config.PadConfirm);
 
     case Action::Cancel:
         return IsKeyTrigger(config.KeyCancel) || IsPadTrigger(config.PadCancel);
@@ -53,12 +53,43 @@ bool Input::IsActionTrigger(Action action) {
         return IsKeyTrigger(config.KeyJump) || IsPadTrigger(config.PadJump);
 
     case Action::Up:
-        return IsKeyTrigger(KEY_INPUT_W) || IsKeyTrigger(KEY_INPUT_UP);
+        return IsKeyTrigger(KEY_INPUT_UP);
 
     case Action::Down:
-        return IsKeyTrigger(KEY_INPUT_S)||IsKeyTrigger(KEY_INPUT_DOWN);
+        return IsKeyTrigger(KEY_INPUT_DOWN);
+
+    case Action::Right:
+        return IsKeyTrigger(KEY_INPUT_RIGHT);
+
+    case Action::Left:
+        return IsKeyTrigger(KEY_INPUT_LEFT);
     }
+
     return false;
+}
+bool Input::IsActionPressed(Action action) {
+    switch (action) {
+    case Action::Dash:
+        return IsKeyPressed(config.KeyDash) || IsPadPressed(config.PadDash);
+
+    case Action::Up:
+        return IsKeyPressed(KEY_INPUT_UP);
+
+    case Action::Down:
+        return IsKeyPressed(KEY_INPUT_DOWN);
+
+    case Action::Right:
+        return IsKeyPressed(KEY_INPUT_RIGHT);
+
+    case Action::Left:
+        return IsKeyPressed(KEY_INPUT_LEFT);
+    }
+
+    return false;
+}
+//許可されてるキー
+bool Input::IsValidBindKey(int key) {
+    return KeyToStringSafe(key) != "UNKNOWN";
 }
 
 float Input::GetPadLX() {
@@ -89,8 +120,8 @@ float Input::GetAxisLX() {
     float x = 0;
 
     // キーボード
-    if (IsKeyPressed(KEY_INPUT_A)) x -= 1.0f;
-    if (IsKeyPressed(KEY_INPUT_D)) x += 1.0f;
+    if (IsActionPressed(Action::Up)) x -= 1.0f;
+    if (IsActionPressed(Action::Down)) x += 1.0f;
 
     // パッド
     float lx = GetPadLX();
@@ -107,8 +138,8 @@ float Input::GetAxisLY() {
     float y = 0;
 
     // キーボード
-    if (IsKeyPressed(KEY_INPUT_W)) y += 1.0f;
-    if (IsKeyPressed(KEY_INPUT_S)) y -= 1.0f;
+    if (IsActionPressed(Action::Right)) y += 1.0f;
+    if (IsActionPressed(Action::Left)) y -= 1.0f;
 
     // パッド
     float ly = GetPadLY();

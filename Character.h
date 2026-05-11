@@ -22,7 +22,8 @@ struct Angle {
 enum class PlayerState {
 	Jump,
 	Idle,
-	Walk
+	Walk,
+	Dash
 };
 
 

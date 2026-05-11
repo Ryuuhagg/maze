@@ -13,21 +13,27 @@ using namespace std;
 Player p;
 Camela c(p);
 
-Title::Title() {
+Title::Title():first(false) {
 	Init();
 }
 
 void Title::Init() {
-
+	
 }
 
 void Title::Draw() {
 	DrawString(WIDTH / 2, HEIGHT / 2, "タイトル画面",GetColor(255,255,255));
 }
 void Title::Update(SceneManager& manager) {
+	if (!first) {
+		option.LoadOption(config);
+		Input::SetConfig(config);
+		first = true;
+	}
+		
 	if (Input::IsActionTrigger(Action::Confirm)) {
 		manager.ChangeScene(
-			make_unique<Game>(), 
+			make_unique<OptionMenu>(), 
 			make_unique<Slide>()
 		);
 	}
@@ -104,7 +110,7 @@ void OptionMenu::Init() {
 	int y = 100;
 	int line = 60;
 
-	auto Title_text = make_shared<Label>(Pos{ 100,100 }, 0, 0, "OPTION", WHITE);
+	auto Title_text = make_shared<Label>(Pos{ 100,50 }, 0, 0, "OPTION", WHITE, 48);
 
 	// --- Audio ---
 	auto master_text = make_shared<Label>(Pos{ x , y + line * 1 }, 0, 0, "Master Volume", WHITE);
@@ -132,8 +138,18 @@ void OptionMenu::Init() {
 	invertY->Set(config.CamelaUpDownFlip);
 	invertX->Set(config.CamelaRightLeftFlip);
 
+	// --- キーコンフィグ ---
+	auto KeyCon_text = make_shared<Label>(Pos{ x , y + line * 6 }, 0, 0, "Key Config", WHITE,32);
+
+	auto jump_text = make_shared<Label>(Pos{ x , y + line * 6 }, 0, 0, "Jump", WHITE);
+	auto jumpKey = make_shared<KeyBindButton>(Pos{ x + 200, y + line * 7 }, 150, 40, &config.KeyJump);
+
+
+
+	
+
 	// --- Saveボタン ---
-	auto saveBtn = make_shared<Button>(Pos{ x + 100, y + line * 8 }, 150, 50);
+	auto saveBtn = make_shared<Button>(Pos{ x + 100, y + 60 * 8 }, 150, 50);
 	saveBtn->SetOnClick([this, master, bgm, se, invertY, invertX]() {
 
 		config.masterVolume = (int)(master->GetValue() * 100);
@@ -148,15 +164,15 @@ void OptionMenu::Init() {
 		printfDx("Saved!\n");
 	});
 
-	auto save_text = make_shared<Label>(Pos{ x + 150, y + line * 8 + 20 }, 0, 0, "Save", WHITE);
+	auto save_text = make_shared<Label>(Pos{ x + 150, y + 60 * 8 + 20 }, 0, 0, "Save", BLACK);
 
 	// --- Backボタン ---
-	auto backBtn = make_shared<Button>(Pos{ x + 300, y + line * 8 }, 150, 50);
+	auto backBtn = make_shared<Button>(Pos{ x + 300, y + 60 * 8 }, 150, 50);
 	backBtn->SetOnClick([this]() {
 		goBack = true;
 	});
 
-	auto back_text = make_shared<Label>(Pos{ x + 350, y + line * 8 + 20 }, 0, 0, "Back", WHITE);
+	auto back_text = make_shared<Label>(Pos{ x + 350, y + 60 * 8 + 20 }, 0, 0, "Back", BLACK);
 
 	uiManager.Add(Title_text);
 
@@ -174,6 +190,8 @@ void OptionMenu::Init() {
 
 	uiManager.Add(invertY_text);
 	uiManager.Add(invertX_text);
+
+	uiManager.Add(jumpKey);
 
 	uiManager.Add(saveBtn);
 	uiManager.Add(save_text);

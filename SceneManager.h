@@ -10,6 +10,8 @@ class SceneManager {
 	unique_ptr<Scene> next;
 	unique_ptr<Transition> transition;
 public:
+	SceneManager();
+	~SceneManager();
 	void Update();
 	void Draw();
 	void ChangeScene(unique_ptr<Scene> newScene,

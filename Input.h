@@ -6,6 +6,7 @@ enum class Action {
 	Confirm,
 	Cancel,
 	Jump,
+	Dash,
 	Up,
 	Down,
 	Left,
@@ -42,7 +43,9 @@ public:
 	static bool IsPadTrigger(int button){ return (padNow & button) && !(padPrev & button); }
 	//アクションをPADとキーボードで共通させる
 	static bool IsActionTrigger(Action action);
+	static bool IsActionPressed(Action action);
 
+	static bool IsValidBindKey(int key);
 	// 押している間
 	static bool IsMousePressed(int button) { return mouseNow & button; }
 	// 押した瞬間

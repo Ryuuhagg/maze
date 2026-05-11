@@ -4,9 +4,11 @@
     "CamelaUpDownFlip": false,
     "KeyCancel": "ESC",
     "KeyConfirm": "ENTER",
+    "KeyDash": "LSHIFT",
     "KeyJump": "SPACE",
     "PadCancel": "A",
     "PadConfirm": "B",
+    "PadDash": "PSL",
     "PadJump": "X",
     "SEVolume": 50,
     "masterVolume": 50
