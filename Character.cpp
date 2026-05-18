@@ -35,6 +35,8 @@ void Player::Update() {
     //MoveAngle();
     Jump();
 
+    Dash();
+
     UpdateState();
     UpdateAnimation();
 
@@ -70,8 +72,18 @@ void Player::Move() {
         angle.x = atan2f(moveX, moveZ);
     }
 
+    if (Input::IsActionPressed(Action::Dash)) {
+        isDash = true;
+    }
+
     pos.x += moveX * speed;
     pos.z += moveZ * speed;
+}
+
+void Player::Dash() {
+    if (isDash) {
+        speed *= 1.5f;
+    }
 }
 
 void Player::MoveAngle() {
@@ -109,6 +121,9 @@ void Player::UpdateState() {
     if (!isGround) {
         m_state = PlayerState::Jump;
     }
+    else if (isDash) {
+        m_state = PlayerState::Dash;
+    }
     else if (fabs(x) > 0.1f || fabs(y) > 0.1f) {
         m_state = PlayerState::Walk;
     }
@@ -124,6 +139,7 @@ void Player::UpdateAnimation() {
     case PlayerState::Jump: nextAnim = 0; break;
     case PlayerState::Idle: nextAnim = 1; break;
     case PlayerState::Walk: nextAnim = 2; break;
+    case PlayerState::Dash: nextAnim = 3; break;
     }
 
     if (nextAnim != m_currentAnimNo) {

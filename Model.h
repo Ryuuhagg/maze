@@ -6,6 +6,7 @@ struct ModelData {
 	int idle;
 	int walk;
 	int jump;
+	int dash;
 };
 extern ModelData beaver;
 extern ModelData cat;

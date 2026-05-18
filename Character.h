@@ -42,6 +42,8 @@ class Player : public Character {
 	float gravity = -0.01f;
 	bool isGround = true;
 
+	bool isDash = false;
+
 	PlayerState m_state = PlayerState::Idle;
 	Angle angle = { 0.0f, 0.3f };
 	Angle C_angle = { 0.0f, 0.3f };
@@ -54,6 +56,8 @@ public:
 	void Draw() override;
 
 	void Move();
+
+	void Dash();
 
 	void MoveAngle();
 

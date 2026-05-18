@@ -25,7 +25,7 @@ void UIManager::Update() {
         }
     }
 
-    if (!anyUsing) {
+    if (enableScroll&&!anyUsing) {
         scrollY += GetMouseWheelRotVol() * -20;
     }
 
@@ -62,19 +62,23 @@ void UIManager::Update() {
         uiList[i]->SetFocus(i == focusIndex);
     }
 
-    if (!uiList.empty()) {
+    if (enableScroll&&!uiList.empty()) {
         int y = uiList[focusIndex]->GetPos().y;
 
-        int screenTop = scrollY;
-        int screenBottom = scrollY + 400; // 表示範囲（適宜調整）
+        const int viewHeight = 400;
+        const int margin = 80;
 
         int targetScroll = scrollY;
 
-        if (y < scrollY) {
-            targetScroll = y;
+        if (y < scrollY + margin) {
+            targetScroll = y - margin;
         }
-        else if (y > scrollY + 400) {
-            targetScroll = y - 400;
+        else if (y > scrollY + viewHeight - margin) {
+            targetScroll = y - viewHeight + margin;
+        }
+
+        if (targetScroll < 0) {
+            targetScroll = 0;
         }
 
         // 補間（なめらか）
@@ -98,9 +102,13 @@ void UIManager::Update() {
 
     if (!anyUsing && Input::IsMouseMoved()) {
         for (int i = 0; i < uiList.size(); i++) {
-            if (uiList[i]->IsSelectable() &&
-                uiList[i]->IsMouseOverSelf(scrollY)) {
-                focusIndex = i;
+            if (uiList[i]->IsSelectable() && uiList[i]->IsMouseOverSelf(scrollY)) {
+
+                if (abs(i - focusIndex) <= 5) {
+                    focusIndex = i;
+                }
+
+                break;
             }
         }
     }

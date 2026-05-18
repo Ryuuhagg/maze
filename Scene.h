@@ -6,6 +6,8 @@
 class SceneManager;
 
 class Scene {
+protected:
+	UIManager uiManager;
 public:
 	virtual void Init() = 0;
 	virtual void Update(SceneManager& manager) = 0;
@@ -15,6 +17,8 @@ public:
 class Title :public Scene {
 	Config config;
 	Option option;
+
+	int changeFlg;
 
 	bool first;
 public:
@@ -47,7 +51,6 @@ public:
 };
 
 class OptionMenu : public Scene {
-	UIManager uiManager;
 	Config config;
 	Option option;
 	bool goBack = false;
