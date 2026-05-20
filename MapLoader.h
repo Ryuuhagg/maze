@@ -1,10 +1,13 @@
-#pragma once
+ï»¿#pragma once
 #include "DxLib.h"
 #include "MapData.h"
 
 /// <summary>
-/// MapLoader ‚ğ‹N“®‚·‚é‚É‚Í@MapData.h MapLoader.h/cpp mapmain.cpp‚ª•K—v
+/// MapLoader ã‚’èµ·å‹•ã™ã‚‹ã«ã¯ã€€MapData.h MapLoader.h/cpp mapmain.cppãŒå¿…è¦
 /// </summary>
+
+
+
 
 void InitGameMap();
 void LoadGameMap();
@@ -13,7 +16,14 @@ void DrawGameMap();
 
 bool HasWallEdge(int y, int z, int x, int edge);
 bool CanMoveCellToCell(int y, int fromX, int fromZ, int toX, int toZ);
+bool CanMoveWorldPosition(int y, float worldX, float worldZ, float radius);
+bool IsGoalWorldPosition(int y, float worldX, float worldZ);
+VECTOR ResolvePlayerMapCollision(VECTOR currentPos, VECTOR nextPos, float radius, int currentLayer);
+float GetMapGroundY(float worldX, float worldZ);
+bool IsStairsAtWorld(float worldX, float worldZ);
 bool IsGoalCell(int y, int z, int x);
+
+extern int GetMapLayerFromWorldY(float worldY);
 
 extern int gameCurrentMapIndex;
 
@@ -26,3 +36,4 @@ extern int gameGoalY;
 extern int gameGoalZ;
 
 VECTOR GetStartPosition();
+

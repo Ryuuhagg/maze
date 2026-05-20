@@ -58,5 +58,7 @@ void UpdateEditorUI(int mx, int my, int lClick);
 
 void ClearCurrentLayer();
 void ResetAllMap();
+extern int CollisionCornerScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+extern int CollisionCornerThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 
 #pragma endregion

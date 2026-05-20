@@ -42,6 +42,8 @@ class Player : public Character {
 	float gravity = -0.01f;
 	bool isGround = true;
 
+	int m_layer = 0;
+
 	bool isDash = false;
 
 	PlayerState m_state = PlayerState::Idle;

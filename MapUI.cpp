@@ -168,19 +168,56 @@ void UpdateEditorUI(int mx, int my, int lClick)
 #pragma region ボタン
 
     if (mx >= uiX + PAD && mx <= uiX + 116 &&
-        my >= 520 && my <= 550)
+        my >= 536 && my <= 562)
     {
         showGrid = !showGrid;
         return;
     }
 
     if (mx >= uiX + 128 && mx <= uiX + 248 &&
-        my >= 520 && my <= 550)
+        my >= 536 && my <= 562)
     {
         brushMode = !brushMode;
         return;
     }
 
+    // 2026-05-11: ON/OFFを減らし、セル編集/辺編集ボタンから直接編集に入れるよう変更。
+    if (mx >= uiX + PAD && mx <= uiX + 116 &&
+        my >= 568 && my <= 594)
+    {
+        collisionEditMode = true;
+        collisionEdgeEditMode = false;
+        // 2026-05-13: セル編集へ戻った時に厚みモードの選択が残らないよう追加。
+        collisionDepthEditMode = false;
+        showCollisionDebug = true;
+        return;
+    }
+
+    if (mx >= uiX + 128 && mx <= uiX + 248 &&
+        my >= 568 && my <= 594)
+    {
+        collisionEditMode = true;
+        collisionEdgeEditMode = true;
+        // 2026-05-13: 辺編集を開始した時はまず長さモードから触れるよう追加。
+        collisionDepthEditMode = false;
+        showCollisionDebug = true;
+        return;
+    }
+
+    if (mx >= uiX + PAD && mx <= uiX + 116 &&
+        my >= 600 && my <= 626)
+    {
+        collisionEditMode = false;
+        return;
+    }
+
+    if (mx >= uiX + 128 && mx <= uiX + 248 &&
+        my >= 600 && my <= 626)
+    {
+        // 2026-05-13: Shift操作ではなくボタンで辺の長さ編集/厚み編集を切り替えるため変更。
+        collisionDepthEditMode = !collisionDepthEditMode;
+        return;
+    }
 #pragma endregion
 }
 
@@ -354,6 +391,9 @@ void DrawEditorUI()
     DrawSmallText(uiX + 138, 456, "V   範囲選択", GetColor(210, 210, 210));
     DrawSmallText(uiX + 138, 476, "Ctrl+C コピー", GetColor(210, 210, 210));
     DrawSmallText(uiX + 138, 496, "Ctrl+V 貼付", GetColor(210, 210, 210));
+    // 2026-05-13: Shift操作をやめ、ボタンで長さ/厚みモードを切り替える表示へ修正。
+    DrawSmallText(uiX + PAD, 516, "辺:Wheel 調整", GetColor(210, 210, 210));
+    DrawSmallText(uiX + 138, 516, collisionDepthEditMode ? "厚みモード" : "長さモード", GetColor(210, 210, 210));
 
 #pragma endregion
 
@@ -361,28 +401,57 @@ void DrawEditorUI()
 #pragma region ボタン
 
     DrawButton(
-        uiX + PAD, 520,
-        uiX + 116, 550,
+        uiX + PAD, 536,
+        uiX + 116, 562,
         showGrid ? "グリッドON" : "グリッドOFF",
         showGrid
     );
 
     DrawButton(
-        uiX + 128, 520,
-        uiX + 248, 550,
+        uiX + 128, 536,
+        uiX + 248, 562,
         brushMode ? "ブラシON" : "ブラシOFF",
         brushMode
     );
 
+    // 2026-05-11: ON/OFFを減らし、セル編集/辺編集を直接選べるボタンへ変更。
+    DrawButton(
+        uiX + PAD, 568,
+        uiX + 116, 594,
+        "セル編集",
+        collisionEditMode && !collisionEdgeEditMode
+    );
+
+    DrawButton(
+        uiX + 128, 568,
+        uiX + 248, 594,
+        "辺編集",
+        collisionEditMode && collisionEdgeEditMode
+    );
+
+    DrawButton(
+        uiX + PAD, 600,
+        uiX + 116, 626,
+        "編集終了",
+        false
+    );
+
+    // 2026-05-13: 辺編集時に長さと壁の厚みをボタンで切り替えられるよう変更。
+    DrawButton(
+        uiX + 128, 600,
+        uiX + 248, 626,
+        collisionDepthEditMode ? "厚みモード" : "長さモード",
+        collisionDepthEditMode
+    );
 #pragma endregion
 
 
 #pragma region 開始 / ゴール
 
-    DrawPanelTitle(uiX + PAD, 574, "地点");
+    DrawPanelTitle(uiX + PAD, 640, "地点");
 
     DrawFormatStringToHandle(
-        uiX + PAD, 600,
+        uiX + PAD, 664,
         GetColor(80, 255, 120),
         uiSmallFont,
         "開始  %d,%d,%d",
@@ -390,7 +459,7 @@ void DrawEditorUI()
     );
 
     DrawFormatStringToHandle(
-        uiX + PAD, 624,
+        uiX + PAD, 688,
         GetColor(255, 100, 100),
         uiSmallFont,
         "ゴール %d,%d,%d",

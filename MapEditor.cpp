@@ -1,11 +1,15 @@
-ï»¿#include "MapEditor.h"
+#include "MapEditor.h"
 #include "Input.h"
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
 #include <math.h>
 
 using namespace std;
 
-#pragma region ===== ãƒãƒƒãƒ—é…åˆ— =====
+#pragma region ===== ƒ}ƒbƒv”z—ñ =====
 
 int FloorMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 int FloorRot[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
@@ -22,11 +26,45 @@ int DecoMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 int DecoRot[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 
 int EventMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
-
+// 2026-05-11: ƒGƒfƒBƒ^[‚ÅƒZƒ‹’PˆÊ‚Ìè“®“–‚½‚è”»’è‚ğ‚½‚¹ACSVŒo—R‚ÅLoader‚Ö“n‚·‚½‚ß’Ç‰ÁB
+int CollisionMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+// 2026-05-11: Loader‚Ì•Çƒ‰ƒCƒ“”»’è‚ğƒGƒfƒBƒ^[‚Å’¼ÚŒ©‚Ä•ÒW‚Å‚«‚é‚æ‚¤A•Ó’PˆÊ‚Ìè“®“–‚½‚è”»’è‚ğ’Ç‰ÁB
+int CollisionEdgeMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+// 2026-05-11: •Ó“–‚½‚è”»’è‚ğL‚Î‚µ‚½‚èk‚ß‚½‚è‚·‚é•ÒW’l‚ğ‚Â‚½‚ß’Ç‰ÁB100‚ª’Êí‚Ì’·‚³B
+int CollisionEdgeScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X][4];
+// 2026-05-11: •Ó“–‚½‚è”»’è‚ÌŒú‚³‚ğ•ÒW‚Å‚«‚é‚æ‚¤A100‚ğ’Êí‚ÌŒú‚³‚Æ‚µ‚Ä’Ç‰ÁB
+int CollisionEdgeThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X][4];
+// 2026-05-13: ƒR[ƒi[“–‚½‚è”»’è‚Ì’·‚³/Œú‚İ‚ğƒGƒfƒBƒ^[‚Å’²®E•Û‘¶‚·‚é‚½‚ß’Ç‰ÁB
+int CollisionCornerScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+int CollisionCornerThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 #pragma endregion
 
 
-#pragma region ===== ã‚¨ãƒ‡ã‚£ã‚¿çŠ¶æ…‹ =====
+#pragma region ===== ƒ‚ƒfƒ‹•Ê‚ÌŠù’è“–‚½‚è”»’è =====
+
+enum EditorCollisionType
+{
+    EDITOR_COLL_NONE,
+    EDITOR_COLL_CIRCLE,
+    EDITOR_COLL_BOX,
+    EDITOR_COLL_WALL,
+    EDITOR_COLL_STAIRS
+};
+
+struct EditorCollisionInfo
+{
+    EditorCollisionType type;
+    float radius;
+    float width;
+    float depth;
+};
+
+// 2026-05-11: ƒIƒuƒWƒFƒNƒg‚ğ’u‚¢‚½“_‚ÅŠù’è‚Ì“–‚½‚è”»’è‚ğ‚½‚¹AƒGƒfƒBƒ^[‚ÅŒ©‚¦‚é‚æ‚¤‚É‚·‚é‚½‚ß’Ç‰ÁB
+EditorCollisionInfo editorCollisionTable[MODEL_MAX];
+
+
+
+#pragma region ===== ƒGƒfƒBƒ^ó‘Ô =====
 
 int currentLayer = 0;
 int currentRot = 0;
@@ -40,6 +78,13 @@ int hoverZ = -1;
 
 bool showGrid = true;
 bool brushMode = false;
+// 2026-05-11: “–‚½‚è”»’è•ÒW‚ÆŠm”F•\¦‚ğA”z’uì‹Æ’†‚ÉØ‚è‘Ö‚¦‚ç‚ê‚é‚æ‚¤’Ç‰ÁB
+bool showCollisionDebug = false;
+bool collisionEditMode = false;
+// 2026-05-11: “–‚½‚è”»’è•ÒW‚ÉƒZƒ‹•ÒW/•Ó•ÒW‚ğØ‚è‘Ö‚¦‚é‚½‚ß’Ç‰ÁB
+bool collisionEdgeEditMode = false;
+// 2026-05-13: •Ó/ƒR[ƒi[“–‚½‚è‚ÌƒzƒC[ƒ‹•ÒW‚ğ’·‚³ƒ‚[ƒh/Œú‚İƒ‚[ƒh‚ÅØ‚è‘Ö‚¦‚é‚½‚ß’Ç‰ÁB
+bool collisionDepthEditMode = false;
 
 int startX = 0, startY = 0, startZ = 0;
 int goalX = 5, goalY = 0, goalZ = 5;
@@ -47,7 +92,7 @@ int goalX = 5, goalY = 0, goalZ = 5;
 #pragma endregion
 
 
-#pragma region ===== ã‚«ãƒ¡ãƒ© =====
+#pragma region ===== ƒJƒƒ‰ =====
 
 float camRotY = 0.0f;
 float camRotX = -0.4f;
@@ -56,7 +101,7 @@ float camDist = 5000.0f;
 #pragma endregion
 
 
-#pragma region ===== ãƒªã‚½ãƒ¼ã‚¹ =====
+#pragma region ===== ƒŠƒ\[ƒX =====
 
 int modelHandles[MODEL_MAX];
 int paletteTex[MODEL_MAX];
@@ -64,7 +109,7 @@ int paletteTex[MODEL_MAX];
 #pragma endregion
 
 
-#pragma region ===== ã‚¿ãƒ–è¨­å®š =====
+#pragma region ===== ƒ^ƒuİ’è =====
 
 int tabModelList[TAB_MAX][16] =
 {
@@ -80,7 +125,7 @@ int tabModelCount[TAB_MAX] = { 1,3,1,3,2 };
 #pragma endregion
 
 
-#pragma region ===== å…¥åŠ›çŠ¶æ…‹ =====
+#pragma region ===== “ü—Íó‘Ô =====
 
 int oldMX = 0;
 int oldMY = 0;
@@ -90,7 +135,7 @@ int oldMouse = 0;
 #pragma endregion
 
 
-#pragma region ===== ãƒ–ãƒ©ã‚·çŠ¶æ…‹ =====
+#pragma region ===== ƒuƒ‰ƒVó‘Ô =====
 
 int lastBrushX = -1;
 int lastBrushZ = -1;
@@ -99,7 +144,7 @@ int lastBrushLayer = -1;
 #pragma endregion
 
 
-#pragma region ===== ç¯„å›²é¸æŠçŠ¶æ…‹ =====
+#pragma region ===== ”ÍˆÍ‘I‘ğó‘Ô =====
 
 bool selectMode = false;
 bool selecting = false;
@@ -113,7 +158,7 @@ int selectLayer = 0;
 #pragma endregion
 
 
-#pragma region ã‚³ãƒ”ãƒ¼
+#pragma region ƒRƒs[
 
 const int COPY_MAX_X = BLOCK_NUM_X;
 const int COPY_MAX_Z = BLOCK_NUM_Z;
@@ -137,11 +182,26 @@ int CopyDecoMap[COPY_MAX_Z][COPY_MAX_X];
 int CopyDecoRot[COPY_MAX_Z][COPY_MAX_X];
 
 int CopyEventMap[COPY_MAX_Z][COPY_MAX_X];
+// 2026-05-11: ”ÍˆÍƒRƒs[/“\‚è•t‚¯‚Å‚àè“®“–‚½‚è”»’è‚ğˆê‚Éˆµ‚¤‚½‚ß’Ç‰ÁB
+int CopyCollisionMap[COPY_MAX_Z][COPY_MAX_X];
+// 2026-05-11: ”ÍˆÍƒRƒs[/“\‚è•t‚¯‚Å‚à•Ó’PˆÊ‚Ì“–‚½‚è”»’è‚ğˆê‚Éˆµ‚¤‚½‚ß’Ç‰ÁB
+int CopyCollisionEdgeMap[COPY_MAX_Z][COPY_MAX_X];
+// 2026-05-11: ”ÍˆÍƒRƒs[/“\‚è•t‚¯‚Å‚à•Ó‚ÌLk’l‚ğˆê‚Éˆµ‚¤‚½‚ß’Ç‰ÁB
+int CopyCollisionEdgeScaleMap[COPY_MAX_Z][COPY_MAX_X][4];
+// 2026-05-11: ”ÍˆÍƒRƒs[/“\‚è•t‚¯‚Å‚à•Ó‚ÌŒú‚³‚ğˆê‚Éˆµ‚¤‚½‚ß’Ç‰ÁB
+int CopyCollisionEdgeThicknessMap[COPY_MAX_Z][COPY_MAX_X][4];
+// 2026-05-13: ”ÍˆÍƒRƒs[/“\‚è•t‚¯‚Å‚àƒR[ƒi[“–‚½‚è’²®’l‚ğˆê‚Éˆµ‚¤‚½‚ß’Ç‰ÁB
+int CopyCollisionCornerScaleMap[COPY_MAX_Z][COPY_MAX_X];
+int CopyCollisionCornerThicknessMap[COPY_MAX_Z][COPY_MAX_X];
+int CopyCollisionCornerOffsetMap[COPY_MAX_Z][COPY_MAX_X];
+
+// 2026-05-13: ƒR[ƒi[“–‚½‚è”»’è‚Ì‰œsƒIƒtƒZƒbƒg‚ğ•ÒWE•Û‘¶‚·‚é‚½‚ß’Ç‰ÁB
+int CollisionCornerOffsetMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 
 #pragma endregion
 
 
-#pragma region ===== å…±é€šåˆ¤å®š =====
+#pragma region ===== ‹¤’Ê”»’è =====
 
 static bool IsMapPosValid(int layer, int z, int x)
 {
@@ -165,7 +225,7 @@ static bool HasValidSelection()
 
 #pragma endregion
 
-#pragma region ===== ã‚¤ãƒ™ãƒ³ãƒˆé…ç½® =====
+#pragma region ===== ƒCƒxƒ“ƒg”z’u =====
 
 static void ClearEventId(int eventId)
 {
@@ -207,7 +267,7 @@ static void PlaceEvent(int layer, int z, int x, int eventId)
 
 #pragma endregion
 
-#pragma region ===== åº§æ¨™ãƒ»å›è»¢ =====
+#pragma region ===== À•WE‰ñ“] =====
 
 static float RotToRad(int rot)
 {
@@ -245,13 +305,380 @@ static VECTOR GetModelDrawPosition(int tab, int x, int y, int z, int rot)
     if (tab == WALL)
         return GetWallPosition(x, y, z, rot);
 
-    return GetBlockCenterPosition(x, y, z);
+    VECTOR pos = GetBlockCenterPosition(x, y, z);
+
+    // ŠK’i‚¾‚¯ˆÊ’u•â³
+    if (tab == DECO && DecoMap[y][z][x] == 5)
+    {
+        float offset = BLOCK_SIZE * -0.25f;
+
+        switch (rot % 4)
+        {
+        case 0:
+            pos.z += offset;
+            break;
+
+        case 1:
+            pos.x += offset;
+            break;
+
+        case 2:
+            pos.z -= offset;
+            break;
+
+        case 3:
+            pos.x -= offset;
+            break;
+        }
+    }
+
+    return pos;
 }
 
 #pragma endregion
 
 
-#pragma region ===== ã‚³ãƒ”ãƒ¼å‡¦ç† =====
+#pragma region ===== “–‚½‚è”»’èİ’è =====
+
+static vector<string> SplitCollisionCSV(const string& line)
+{
+    // 2026-05-11: V‚µ‚¢ƒIƒuƒWƒFƒNƒg‚ğ’Ç‰Á‚µ‚½‚ÉACSV‚ÅŠù’è“–‚½‚è”»’è‚ğ‘‚â‚¹‚é‚æ‚¤’Ç‰ÁB
+    vector<string> result;
+    string item;
+    stringstream ss(line);
+
+    while (getline(ss, item, ','))
+    {
+        result.push_back(item);
+    }
+
+    return result;
+}
+
+static EditorCollisionType ParseEditorCollisionType(const string& text)
+{
+    // 2026-05-11: collision_config.csv ‚Ì•¶š—ñ‚©‚ç“–‚½‚è”»’èƒ^ƒCƒv‚ğ‘I‚×‚é‚æ‚¤’Ç‰ÁB
+    if (text == "CIRCLE") return EDITOR_COLL_CIRCLE;
+    if (text == "BOX") return EDITOR_COLL_BOX;
+    if (text == "WALL") return EDITOR_COLL_WALL;
+    if (text == "STAIRS") return EDITOR_COLL_STAIRS;
+    return EDITOR_COLL_NONE;
+}
+
+static void InitEditorCollisionTable()
+{
+    // 2026-05-11: Loader‘¤‚ÌŠù’è“–‚½‚è”»’è‚ğƒGƒfƒBƒ^[‚Å‚àŒ©‚¦‚é‚æ‚¤‚É‚·‚é‚½‚ß’Ç‰ÁB
+    for (int i = 0; i < MODEL_MAX; i++)
+    {
+        editorCollisionTable[i].type = EDITOR_COLL_NONE;
+        editorCollisionTable[i].radius = 0.0f;
+        editorCollisionTable[i].width = 0.0f;
+        editorCollisionTable[i].depth = 0.0f;
+    }
+
+    editorCollisionTable[1].type = EDITOR_COLL_WALL;
+
+    editorCollisionTable[2].type = EDITOR_COLL_CIRCLE;
+    editorCollisionTable[2].radius = BLOCK_SIZE * 0.3f;
+
+    editorCollisionTable[5].type = EDITOR_COLL_STAIRS;
+
+    editorCollisionTable[6].type = EDITOR_COLL_BOX;
+    editorCollisionTable[6].width = BLOCK_SIZE * 0.3f;
+    editorCollisionTable[6].depth = BLOCK_SIZE * 0.3f;
+
+    editorCollisionTable[7].type = EDITOR_COLL_CIRCLE;
+    editorCollisionTable[7].radius = BLOCK_SIZE * 0.20f;
+
+    ifstream ifs("collision_config.csv");
+    if (!ifs)
+        return;
+
+    string line;
+    while (getline(ifs, line))
+    {
+        if (line.empty() || line[0] == '#')
+            continue;
+
+        vector<string> cols = SplitCollisionCSV(line);
+        if (cols.size() < 2 || cols[0] == "id")
+            continue;
+
+        int id = stoi(cols[0]);
+        if (id < 0 || id >= MODEL_MAX)
+            continue;
+
+        editorCollisionTable[id].type = ParseEditorCollisionType(cols[1]);
+        editorCollisionTable[id].radius = cols.size() >= 3 ? stof(cols[2]) : 0.0f;
+        editorCollisionTable[id].width = cols.size() >= 4 ? stof(cols[3]) : 0.0f;
+        editorCollisionTable[id].depth = cols.size() >= 5 ? stof(cols[4]) : 0.0f;
+    }
+}
+
+#pragma endregion
+
+
+#pragma region ===== “–‚½‚è”»’è•\¦•â• =====
+
+static int GetCollisionEdgeBit(int edge)
+{
+    // 2026-05-11: 1ƒZƒ‹‚É•¡”‚Ì•Ó“–‚½‚è”»’è‚ğ‚½‚¹‚é‚½‚ßA•ûŒü‚ğƒrƒbƒg‚É•ÏŠ·‚·‚éˆ—‚ğ’Ç‰ÁB
+    return 1 << (edge % 4);
+}
+
+static void GetCollisionEdgeLine(int x, int z, int edge, int scale, float& x1, float& z1, float& x2, float& z2)
+{
+    // 2026-05-11: MapLoader.cpp‚Ì•Çƒ‰ƒCƒ“”»’è‚Æ“¯‚¶ˆÊ’u‚ğALk’l‚İ‚ÅƒGƒfƒBƒ^[‰Â‹‰»‚·‚é‚½‚ß’Ç‰ÁB
+    float left = x * BLOCK_SIZE;
+    float right = (x + 1) * BLOCK_SIZE;
+    float top = z * BLOCK_SIZE;
+    float bottom = (z + 1) * BLOCK_SIZE;
+
+    switch (edge % 4)
+    {
+    case 0:
+        x1 = left + BLOCK_SIZE * 0.0f;
+        z1 = top + BLOCK_SIZE * 0.12f;
+        x2 = right - BLOCK_SIZE * 0.0f;
+        z2 = top + BLOCK_SIZE * 0.12f;
+        break;
+
+    case 1:
+        x1 = right - BLOCK_SIZE * -0.12f;
+        z1 = top + BLOCK_SIZE * 0.00f;
+        x2 = right - BLOCK_SIZE * -0.12f;
+        z2 = bottom - BLOCK_SIZE * 0.00f;
+        break;
+
+    case 2:
+        x1 = left + BLOCK_SIZE * 0.0f;
+        z1 = bottom - BLOCK_SIZE * 0.12f;
+        x2 = right - BLOCK_SIZE * 0.0f;
+        z2 = bottom - BLOCK_SIZE * 0.12f;
+        break;
+
+    case 3:
+        x1 = left + BLOCK_SIZE * -0.12f;
+        z1 = top + BLOCK_SIZE * 0.0f;
+        x2 = left + BLOCK_SIZE * -0.12f;
+        z2 = bottom - BLOCK_SIZE * 0.0f;
+        break;
+    }
+
+    float centerX = (x1 + x2) * 0.5f;
+    float centerZ = (z1 + z2) * 0.5f;
+    float rate = scale / 100.0f;
+
+    x1 = centerX + (x1 - centerX) * rate;
+    z1 = centerZ + (z1 - centerZ) * rate;
+    x2 = centerX + (x2 - centerX) * rate;
+    z2 = centerZ + (z2 - centerZ) * rate;
+}
+
+static void DrawCollisionEdgeLine(int x, int y, int z, int edge, int scale, int thickness, int color)
+{
+    // 2026-05-11: •Çƒ‚ƒfƒ‹—R—ˆ/è“®İ’è—R—ˆ‚Ì•Ó“–‚½‚è”»’è‚ğü‚ÅŠm”F‚·‚é‚½‚ß’Ç‰ÁB
+    float x1 = 0.0f;
+    float z1 = 0.0f;
+    float x2 = 0.0f;
+    float z2 = 0.0f;
+    float yy = y * BLOCK_SIZE + 70.0f;
+
+    GetCollisionEdgeLine(x, z, edge, scale, x1, z1, x2, z2);
+    DrawLine3D(VGet(x1, yy, z1), VGet(x2, yy, z2), color);
+    DrawLine3D(VGet(x1, yy + 8.0f, z1), VGet(x2, yy + 8.0f, z2), color);
+
+    // 2026-05-11: •Ó“–‚½‚è”»’è‚ÌŒú‚³‚ğAü‚É’¼Œğ‚·‚é’Z‚¢–Úˆó‚Æ‚µ‚ÄŒ©‚¦‚é‚æ‚¤’Ç‰ÁB
+    float dx = x2 - x1;
+    float dz = z2 - z1;
+    float len = sqrtf(dx * dx + dz * dz);
+    if (len > 0.0001f)
+    {
+        float nx = -dz / len;
+        float nz = dx / len;
+        float half = BLOCK_SIZE * 0.08f * (thickness / 100.0f);
+        float cx = (x1 + x2) * 0.5f;
+        float cz = (z1 + z2) * 0.5f;
+        DrawLine3D(VGet(cx - nx * half, yy + 16.0f, cz - nz * half), VGet(cx + nx * half, yy + 16.0f, cz + nz * half), color);
+    }
+}
+
+static void DrawCollisionCircle(int x, int y, int z, float radius, int color)
+{
+    // 2026-05-11: ‰~Œ`‚ÌŠù’è“–‚½‚è”»’è‚ğAƒIƒuƒWƒFƒNƒg‚ğ’u‚¢‚½“_‚Å’¼ÚŒ©‚¦‚é‚æ‚¤’Ç‰ÁB
+    const int DIV = 32;
+    float cx = x * BLOCK_SIZE + BLOCK_SIZE * 0.5f;
+    float cz = z * BLOCK_SIZE + BLOCK_SIZE * 0.5f;
+    float yy = y * BLOCK_SIZE + 72.0f;
+
+    for (int i = 0; i < DIV; i++)
+    {
+        float a1 = DX_PI_F * 2.0f * i / DIV;
+        float a2 = DX_PI_F * 2.0f * (i + 1) / DIV;
+        DrawLine3D(
+            VGet(cx + cosf(a1) * radius, yy, cz + sinf(a1) * radius),
+            VGet(cx + cosf(a2) * radius, yy, cz + sinf(a2) * radius),
+            color);
+    }
+}
+
+static void DrawCollisionBox(int x, int y, int z, float halfW, float halfD, int color)
+{
+    // 2026-05-11: ” Œ`‚ÌŠù’è“–‚½‚è”»’è‚ğAƒIƒuƒWƒFƒNƒg‚ğ’u‚¢‚½“_‚Å’¼ÚŒ©‚¦‚é‚æ‚¤’Ç‰ÁB
+    float cx = x * BLOCK_SIZE + BLOCK_SIZE * 0.5f;
+    float cz = z * BLOCK_SIZE + BLOCK_SIZE * 0.5f;
+    float yy = y * BLOCK_SIZE + 72.0f;
+
+    float left = cx - halfW;
+    float right = cx + halfW;
+    float top = cz - halfD;
+    float bottom = cz + halfD;
+
+    DrawLine3D(VGet(left, yy, top), VGet(right, yy, top), color);
+    DrawLine3D(VGet(right, yy, top), VGet(right, yy, bottom), color);
+    DrawLine3D(VGet(right, yy, bottom), VGet(left, yy, bottom), color);
+    DrawLine3D(VGet(left, yy, bottom), VGet(left, yy, top), color);
+}
+
+static void DrawCollisionCornerLine(
+    int x,
+    int y,
+    int z,
+    int rot,
+    int scale,
+    int thickness,
+    int offset,
+    int color)
+{
+    // 2026-05-11: CornerMap‚ÌÎ‚ß“–‚½‚è”»’è‚àALoader‚Ì”»’è‚Æ“¯‚¶Œ`‚ÅŒ©‚¦‚é‚æ‚¤’Ç‰ÁB
+    float left = x * BLOCK_SIZE;
+    float right = (x + 1) * BLOCK_SIZE;
+    float top = z * BLOCK_SIZE;
+    float bottom = (z + 1) * BLOCK_SIZE;
+    float inset = BLOCK_SIZE * 0.12f;
+    float yy = y * BLOCK_SIZE + 74.0f;
+    float x1 = 0.0f;
+    float z1 = 0.0f;
+    float x2 = 0.0f;
+    float z2 = 0.0f;
+
+    switch (rot % 4)
+    {
+    case 0:
+        x1 = left + inset;
+        z1 = top + inset;
+        x2 = right - inset;
+        z2 = bottom - inset;
+        break;
+    case 1:
+        x1 = right - inset;
+        z1 = top + inset;
+        x2 = left + inset;
+        z2 = bottom - inset;
+        break;
+    case 2:
+        x1 = right - inset;
+        z1 = bottom - inset;
+        x2 = left + inset;
+        z2 = top + inset;
+        break;
+    case 3:
+        x1 = left + inset;
+        z1 = bottom - inset;
+        x2 = right - inset;
+        z2 = top + inset;
+        break;
+    }
+
+    float centerX = (x1 + x2) * 0.5f;
+    float centerZ = (z1 + z2) * 0.5f;
+
+    float rate = scale / 100.0f;
+
+    x1 = centerX + (x1 - centerX) * rate;
+    z1 = centerZ + (z1 - centerZ) * rate;
+    x2 = centerX + (x2 - centerX) * rate;
+    z2 = centerZ + (z2 - centerZ) * rate;
+
+    // ü•ûŒü
+    float dx = x2 - x1;
+    float dz = z2 - z1;
+    float len = sqrtf(dx * dx + dz * dz);
+
+    // ‰œ/è‘OƒIƒtƒZƒbƒg
+    if (len > 0.0001f)
+    {
+        float nx = -dz / len;
+        float nz = dx / len;
+
+        x1 += nx * offset;
+        z1 += nz * offset;
+
+        x2 += nx * offset;
+        z2 += nz * offset;
+    }
+
+    DrawLine3D(VGet(x1, yy, z1), VGet(x2, yy, z2), color);
+    DrawLine3D(VGet(x1, yy + 8.0f, z1), VGet(x2, yy + 8.0f, z2), color);
+
+    // Œú‚³•\¦
+    if (len > 0.0001f)
+    {
+        float nx = -dz / len;
+        float nz = dx / len;
+
+        float half = BLOCK_SIZE * 0.08f * (thickness / 100.0f);
+
+        float midX = (x1 + x2) * 0.5f;
+        float midZ = (z1 + z2) * 0.5f;
+
+        DrawLine3D(
+            VGet(midX - nx * half, yy + 16.0f, midZ - nz * half),
+            VGet(midX + nx * half, yy + 16.0f, midZ + nz * half),
+            color);
+    }
+}
+
+static void DrawDefaultObjectCollision(int tab, int id, int x, int y, int z, int rot, int color)
+{
+    // 2026-05-11: ƒIƒuƒWƒFƒNƒg‚ªÅ‰‚©‚ç‚Á‚Ä‚¢‚éŠù’è“–‚½‚è”»’è‚ğA”z’uŒã‚·‚®Œ©‚¦‚é‚æ‚¤’Ç‰ÁB
+    if (id < 0 || id >= MODEL_MAX)
+        return;
+
+    if (tab == WALL || editorCollisionTable[id].type == EDITOR_COLL_WALL)
+    {
+        DrawCollisionEdgeLine(x, y, z, rot, 100, 100, color);
+        return;
+    }
+
+    if (tab == CORNER)
+    {
+        DrawCollisionCornerLine(
+            x,
+            y,
+            z,
+            rot,
+            CollisionCornerScaleMap[y][z][x],
+            CollisionCornerThicknessMap[y][z][x],
+            CollisionCornerOffsetMap[y][z][x],
+            color);
+        return;
+    }
+
+    if (editorCollisionTable[id].type == EDITOR_COLL_CIRCLE)
+    {
+        DrawCollisionCircle(x, y, z, editorCollisionTable[id].radius, color);
+    }
+    else if (editorCollisionTable[id].type == EDITOR_COLL_BOX)
+    {
+        DrawCollisionBox(x, y, z, editorCollisionTable[id].width, editorCollisionTable[id].depth, color);
+    }
+}
+
+#pragma endregion
+
+
+#pragma region ===== ƒRƒs[ˆ— =====
 
 static void ClearCopyBuffer()
 {
@@ -269,6 +696,19 @@ static void ClearCopyBuffer()
             CopyCornerMap[z][x] = -1;
             CopyDecoMap[z][x] = -1;
             CopyEventMap[z][x] = -1;
+            // 2026-05-11: ƒRƒs[—pƒoƒbƒtƒ@‰Šú‰»‚É“–‚½‚è”»’è‚ÌŒÃ‚¢’l‚ğc‚³‚È‚¢‚½‚ß’Ç‰ÁB
+            CopyCollisionMap[z][x] = -1;
+            // 2026-05-11: ƒRƒs[—pƒoƒbƒtƒ@‰Šú‰»‚É•Ó“–‚½‚è”»’è‚ÌŒÃ‚¢’l‚ğc‚³‚È‚¢‚½‚ß’Ç‰ÁB
+            CopyCollisionEdgeMap[z][x] = -1;
+            // 2026-05-13: ƒRƒs[—pƒoƒbƒtƒ@‰Šú‰»‚ÉƒR[ƒi[“–‚½‚è’²®’l‚ÌŒÃ‚¢’l‚ğc‚³‚È‚¢‚½‚ß’Ç‰ÁB
+            CopyCollisionCornerScaleMap[z][x] = 100;
+            CopyCollisionCornerThicknessMap[z][x] = 100;
+            CopyCollisionCornerOffsetMap[z][x] = 0;
+            for (int edge = 0; edge < 4; edge++)
+            {
+                CopyCollisionEdgeScaleMap[z][x][edge] = 100;
+                CopyCollisionEdgeThicknessMap[z][x][edge] = 100;
+            }
 
             CopyFloorRot[z][x] = 0;
             CopyWallRotA[z][x] = 0;
@@ -316,6 +756,19 @@ static void CopySelection()
             CopyDecoRot[z][x] = DecoRot[selectLayer][srcZ][srcX];
 
             CopyEventMap[z][x] = EventMap[selectLayer][srcZ][srcX];
+            // 2026-05-11: ”ÍˆÍƒRƒs[‚Éè“®“–‚½‚è”»’è‚àˆê‚É•Û‚·‚é‚½‚ß’Ç‰ÁB
+            CopyCollisionMap[z][x] = CollisionMap[selectLayer][srcZ][srcX];
+            // 2026-05-11: ”ÍˆÍƒRƒs[‚É•Ó“–‚½‚è”»’è‚àˆê‚É•Û‚·‚é‚½‚ß’Ç‰ÁB
+            CopyCollisionEdgeMap[z][x] = CollisionEdgeMap[selectLayer][srcZ][srcX];
+            // 2026-05-13: ”ÍˆÍƒRƒs[‚ÉƒR[ƒi[“–‚½‚è’²®’l‚àˆê‚É•Û‚·‚é‚½‚ß’Ç‰ÁB
+            CopyCollisionCornerScaleMap[z][x] = CollisionCornerScaleMap[selectLayer][srcZ][srcX];
+            CopyCollisionCornerThicknessMap[z][x] = CollisionCornerThicknessMap[selectLayer][srcZ][srcX];
+            CopyCollisionCornerOffsetMap[z][x] = CollisionCornerOffsetMap[selectLayer][srcZ][srcX];
+            for (int edge = 0; edge < 4; edge++)
+            {
+                CopyCollisionEdgeScaleMap[z][x][edge] = CollisionEdgeScaleMap[selectLayer][srcZ][srcX][edge];
+                CopyCollisionEdgeThicknessMap[z][x][edge] = CollisionEdgeThicknessMap[selectLayer][srcZ][srcX][edge];
+            }
         }
     }
 
@@ -352,6 +805,19 @@ static void PasteSelection(int dstLayer, int dstX, int dstZ)
             DecoRot[dstLayer][targetZ][targetX] = CopyDecoRot[z][x];
 
             EventMap[dstLayer][targetZ][targetX] = CopyEventMap[z][x];
+            // 2026-05-11: “\‚è•t‚¯‚Éè“®“–‚½‚è”»’è‚à“¯‚¶ˆÊ’u‚Ö•œŒ³‚·‚é‚½‚ß’Ç‰ÁB
+            CollisionMap[dstLayer][targetZ][targetX] = CopyCollisionMap[z][x];
+            // 2026-05-11: “\‚è•t‚¯‚É•Ó“–‚½‚è”»’è‚à“¯‚¶ˆÊ’u‚Ö•œŒ³‚·‚é‚½‚ß’Ç‰ÁB
+            CollisionEdgeMap[dstLayer][targetZ][targetX] = CopyCollisionEdgeMap[z][x];
+            // 2026-05-13: “\‚è•t‚¯‚ÉƒR[ƒi[“–‚½‚è’²®’l‚à“¯‚¶ˆÊ’u‚Ö•œŒ³‚·‚é‚½‚ß’Ç‰ÁB
+            CollisionCornerScaleMap[dstLayer][targetZ][targetX] = CopyCollisionCornerScaleMap[z][x];
+            CollisionCornerThicknessMap[dstLayer][targetZ][targetX] = CopyCollisionCornerThicknessMap[z][x];
+            CollisionCornerOffsetMap[dstLayer][targetZ][targetX] = CopyCollisionCornerOffsetMap[z][x];
+            for (int edge = 0; edge < 4; edge++)
+            {
+                CollisionEdgeScaleMap[dstLayer][targetZ][targetX][edge] = CopyCollisionEdgeScaleMap[z][x][edge];
+                CollisionEdgeThicknessMap[dstLayer][targetZ][targetX][edge] = CopyCollisionEdgeThicknessMap[z][x][edge];
+            }
         }
     }
 }
@@ -359,7 +825,7 @@ static void PasteSelection(int dstLayer, int dstX, int dstZ)
 #pragma endregion
 
 
-#pragma region ===== é¸æŠãƒ¢ãƒ‡ãƒ« =====
+#pragma region ===== ‘I‘ğƒ‚ƒfƒ‹ =====
 
 int GetSelectedModel()
 {
@@ -375,7 +841,7 @@ int GetSelectedModel()
 #pragma endregion
 
 
-#pragma region ===== ãƒãƒƒãƒ—åˆæœŸåŒ– =====
+#pragma region ===== ƒ}ƒbƒv‰Šú‰» =====
 
 void ClearCurrentLayer()
 {
@@ -393,7 +859,28 @@ void ClearCurrentLayer()
             WallMapB[layer][z][x] = -1;
             CornerMap[layer][z][x] = -1;
             DecoMap[layer][z][x] = -1;
+            if (EventMap[layer][z][x] == 0)
+            {
+                startX = 0; startY = 0; startZ = 0;
+            }
+            else if (EventMap[layer][z][x] == 1)
+            {
+                goalX = 5; goalY = 0; goalZ = 5;
+            }
             EventMap[layer][z][x] = -1;
+            // 2026-05-11: ƒŒƒCƒ„[ƒNƒŠƒA‚Éè“®“–‚½‚è”»’è‚àÁ‚·‚½‚ß’Ç‰ÁB
+            CollisionMap[layer][z][x] = -1;
+            // 2026-05-11: ƒŒƒCƒ„[ƒNƒŠƒA‚É•Ó“–‚½‚è”»’è‚àÁ‚·‚½‚ß’Ç‰ÁB
+            CollisionEdgeMap[layer][z][x] = -1;
+            for (int edge = 0; edge < 4; edge++)
+            {
+                CollisionEdgeScaleMap[layer][z][x][edge] = 100;
+                CollisionEdgeThicknessMap[layer][z][x][edge] = 100;
+
+                CollisionCornerScaleMap[layer][z][x] = 100;
+                CollisionCornerThicknessMap[layer][z][x] = 100;
+                CollisionCornerOffsetMap[layer][z][x] = 0;
+            }
 
             FloorRot[layer][z][x] = 0;
             WallRotA[layer][z][x] = 0;
@@ -406,6 +893,9 @@ void ClearCurrentLayer()
 
 void ResetAllMap()
 {
+    // 2026-05-13: ƒ}ƒbƒv“Ç/ƒŠƒZƒbƒg‚É‘O‚ÌŠJnEƒS[ƒ‹À•W‚ªc‚ç‚È‚¢‚æ‚¤’Ç‰ÁB
+    startX = 0; startY = 0; startZ = 0;
+    goalX = 5; goalY = 0; goalZ = 5;
     for (int y = 0; y < BLOCK_NUM_Y; y++)
     {
         for (int z = 0; z < BLOCK_NUM_Z; z++)
@@ -418,6 +908,21 @@ void ResetAllMap()
                 CornerMap[y][z][x] = -1;
                 DecoMap[y][z][x] = -1;
                 EventMap[y][z][x] = -1;
+                // 2026-05-11: ‘S‘ÌƒŠƒZƒbƒg‚Éè“®“–‚½‚è”»’è‚à‰Šú‰»‚·‚é‚½‚ß’Ç‰ÁB
+                CollisionMap[y][z][x] = -1;
+                // 2026-05-11: ‘S‘ÌƒŠƒZƒbƒg‚É•Ó“–‚½‚è”»’è‚à‰Šú‰»‚·‚é‚½‚ß’Ç‰ÁB
+                CollisionEdgeMap[y][z][x] = -1;
+                for (int edge = 0; edge < 4; edge++)
+                {
+                    CollisionEdgeScaleMap[y][z][x][edge] = 100;
+                    CollisionEdgeThicknessMap[y][z][x][edge] = 100;
+
+                    // 2026-05-13: ‘SÁ‹/“Ç‰Šú‰»‚ÉƒR[ƒi[“–‚½‚è’²®’l‚ÌŒÃ‚¢’l‚ğc‚³‚È‚¢‚½‚ß’Ç‰ÁB
+                    CollisionCornerScaleMap[y][z][x] = 100;
+                    CollisionCornerThicknessMap[y][z][x] = 100;
+                    CollisionCornerOffsetMap[y][z][x] = 0;
+
+                }
 
                 FloorRot[y][z][x] = 0;
                 WallRotA[y][z][x] = 0;
@@ -432,7 +937,7 @@ void ResetAllMap()
 #pragma endregion
 
 
-#pragma region ===== åˆæœŸåŒ– =====
+#pragma region ===== ‰Šú‰» =====
 
 void InitEditor()
 {
@@ -468,12 +973,14 @@ void InitEditor()
         if (modelHandles[i] == -1)
             printfDx("model load failed: %d\n", i);
     }
+
+    InitEditorCollisionTable();
 }
 
 #pragma endregion
 
 
-#pragma region ===== æ›´æ–° =====
+#pragma region ===== XV =====
 
 void UpdateEditor()
 {
@@ -500,7 +1007,7 @@ void UpdateEditor()
     int uiX = SCREEN_W - UI_WIDTH;
     bool isUI = (mx >= uiX);
 
-#pragma region ã‚«ãƒ¡ãƒ©æ“ä½œ
+#pragma region ƒJƒƒ‰‘€ì
 
     if (shift && lClick)
     {
@@ -514,13 +1021,15 @@ void UpdateEditor()
     oldMX = mx;
     oldMY = my;
 
-    camDist -= GetMouseWheelRotVol() * 300.0f;
+    int wheel = GetMouseWheelRotVol();
+    if (!(collisionEditMode && collisionEdgeEditMode))
+        camDist -= wheel * 300.0f;
     camDist = max(1000.0f, min(10000.0f, camDist));
 
 #pragma endregion
 
 
-#pragma region ã‚­ãƒ¼æ“ä½œ
+#pragma region ƒL[‘€ì
 
     if (ctrl && Input::IsKeyTrigger(KEY_INPUT_Z))
     {
@@ -578,7 +1087,7 @@ void UpdateEditor()
 #pragma endregion
 
 
-#pragma region UIã‚¯ãƒªãƒƒã‚¯
+#pragma region UIƒNƒŠƒbƒN
 
     if (lTrigger && isUI)
         UpdateEditorUI(mx, my, true);
@@ -586,7 +1095,7 @@ void UpdateEditor()
 #pragma endregion
 
 
-#pragma region ãƒ¬ã‚¤ã‚­ãƒ£ã‚¹ãƒˆ
+#pragma region ƒŒƒCƒLƒƒƒXƒg
 
     hoverX = -1;
     hoverZ = -1;
@@ -624,7 +1133,7 @@ void UpdateEditor()
     bool canAccess = IsMapPosValid(layer, z, x);
 
 
-#pragma region ã‚³ãƒ”ãƒ¼ / è²¼ã‚Šä»˜ã‘
+#pragma region ƒRƒs[ / “\‚è•t‚¯
 
     if (ctrl && Input::IsKeyTrigger(KEY_INPUT_C))
         CopySelection();
@@ -638,7 +1147,7 @@ void UpdateEditor()
 #pragma endregion
 
 
-#pragma region ç¯„å›²é¸æŠ
+#pragma region ”ÍˆÍ‘I‘ğ
 
     if (selectMode && !isUI && canAccess)
     {
@@ -665,7 +1174,87 @@ void UpdateEditor()
 #pragma endregion
 
 
-#pragma region é…ç½®
+#pragma region “–‚½‚è”»’èLk•ÒW
+
+    // 2026-05-13: ƒzƒC[ƒ‹•ÒW‚ğ’·‚³ƒ‚[ƒh/Œú‚İƒ‚[ƒh‚ÅØ‚è‘Ö‚¦A”ÍˆÍŠOƒZƒ‹‚ğG‚ç‚È‚¢‚æ‚¤C³B
+    if (collisionEditMode && collisionEdgeEditMode && !selectMode && !isUI && canAccess && wheel != 0)
+    {
+        if (CornerMap[layer][z][x] >= 0)
+        {
+            if (collisionDepthEditMode)
+            {
+                int thick = CollisionCornerThicknessMap[layer][z][x] + wheel * 10;
+                thick = max(20, min(500, thick));
+                CollisionCornerThicknessMap[layer][z][x] = thick;
+            }
+            else
+            {
+                int scale = CollisionCornerScaleMap[layer][z][x] + wheel * 10;
+                scale = max(20, min(200, scale));
+                CollisionCornerScaleMap[layer][z][x] = scale;
+            }
+        }
+        else
+        {
+            int mask = CollisionEdgeMap[layer][z][x] >= 0 ? CollisionEdgeMap[layer][z][x] : 0;
+            CollisionEdgeMap[layer][z][x] = mask | GetCollisionEdgeBit(currentRot);
+
+            if (collisionDepthEditMode)
+            {
+                int thick = CollisionEdgeThicknessMap[layer][z][x][currentRot] + wheel * 10;
+                thick = max(20, min(300, thick));
+                CollisionEdgeThicknessMap[layer][z][x][currentRot] = thick;
+            }
+            else
+            {
+                int scale = CollisionEdgeScaleMap[layer][z][x][currentRot] + wheel * 10;
+                scale = max(20, min(200, scale));
+                CollisionEdgeScaleMap[layer][z][x][currentRot] = scale;
+            }
+        }
+    }
+#pragma endregion
+
+#pragma region “–‚½‚è”»’è•ÒW
+
+    // 2026-05-11: ƒZƒ‹’PˆÊ/•Ó’PˆÊ‚Ìè“®“–‚½‚è”»’è‚ğƒGƒfƒBƒ^[‚Å’¼Ú’u‚¯‚é‚æ‚¤’Ç‰ÁB
+    if (collisionEditMode && !selectMode && !shift && !isUI && canAccess)
+    {
+        if (lTrigger)
+        {
+            PushUndo();
+             
+            if (collisionEdgeEditMode)
+            {
+                int mask = CollisionEdgeMap[layer][z][x] >= 0 ? CollisionEdgeMap[layer][z][x] : 0;
+                CollisionEdgeMap[layer][z][x] = mask | GetCollisionEdgeBit(currentRot);
+                CollisionEdgeScaleMap[layer][z][x][currentRot] = 100;
+                CollisionEdgeThicknessMap[layer][z][x][currentRot] = 100;
+            }
+            else
+            {
+                CollisionMap[layer][z][x] = 1;
+            }
+        }
+        else if (rTrigger)
+        {
+            PushUndo();
+
+            if (collisionEdgeEditMode)
+            {
+                int mask = CollisionEdgeMap[layer][z][x] >= 0 ? CollisionEdgeMap[layer][z][x] : 0;
+                mask &= ~GetCollisionEdgeBit(currentRot);
+                CollisionEdgeMap[layer][z][x] = mask > 0 ? mask : -1;
+            }
+            else
+            {
+                CollisionMap[layer][z][x] = -1;
+            }
+        }
+    }
+
+#pragma endregion
+#pragma region ”z’u
 
     bool brushPlace =
         brushMode &&
@@ -678,7 +1267,7 @@ void UpdateEditor()
         lTrigger &&
         canAccess;
 
-    if (!selectMode && !shift && !isUI && (singlePlace || brushPlace))
+    if (!collisionEditMode && !selectMode && !shift && !isUI && (singlePlace || brushPlace))
     {
         PushUndo();
 
@@ -711,6 +1300,10 @@ void UpdateEditor()
         {
             CornerMap[layer][z][x] = model;
             CornerRot[layer][z][x] = currentRot;
+            // 2026-05-13: ƒR[ƒi[”z’u‚É“–‚½‚è”»’è’²®’l‚ğ•W€’l‚Ö–ß‚·‚½‚ß’Ç‰ÁB
+            CollisionCornerScaleMap[layer][z][x] = 100;
+            CollisionCornerThicknessMap[layer][z][x] = 100;
+            CollisionCornerOffsetMap[layer][z][x] = 0;
         }
         else if (currentTab == DECO)
         {
@@ -737,9 +1330,9 @@ void UpdateEditor()
 #pragma endregion
 
 
-#pragma region å‰Šé™¤
+#pragma region íœ
 
-    if (!selectMode && !shift && !isUI && rTrigger && canAccess)
+    if (!collisionEditMode && !selectMode && !shift && !isUI && rTrigger && canAccess)
     {
         PushUndo();
 
@@ -759,6 +1352,10 @@ void UpdateEditor()
         {
             CornerMap[layer][z][x] = -1;
             CornerRot[layer][z][x] = 0;
+            // 2026-05-13: ƒR[ƒi[íœ‚É“–‚½‚è”»’è’²®’l‚à•W€’l‚Ö–ß‚·‚½‚ß’Ç‰ÁB
+            CollisionCornerScaleMap[layer][z][x] = 100;
+            CollisionCornerThicknessMap[layer][z][x] = 100;
+            CollisionCornerOffsetMap[layer][z][x] = 0;
         }
         else if (currentTab == DECO)
         {
@@ -767,6 +1364,14 @@ void UpdateEditor()
         }
         else if (currentTab == EVENT)
         {
+            if (EventMap[layer][z][x] == 0)
+            {
+                startX = 0; startY = 0; startZ = 0;
+            }
+            else if (EventMap[layer][z][x] == 1)
+            {
+                goalX = 5; goalY = 0; goalZ = 5;
+            }
             EventMap[layer][z][x] = -1;
         }
     }
@@ -780,12 +1385,15 @@ void UpdateEditor()
 #pragma endregion
 
 
-#pragma region ===== æç”» =====
+#pragma region ===== •`‰æ =====
 
 void DrawEditor()
 {
     SetUseZBuffer3D(TRUE);
     SetWriteZBuffer3D(TRUE);
+
+    // 2026-05-11: “–‚½‚è”»’è•ÒW’†‚Éü‚ğŒ©‚â‚·‚­‚·‚é‚½‚ßAƒ‚ƒfƒ‹‚ğ­‚µ“§‚©‚·’l‚ğ’Ç‰ÁB
+    float editorModelOpacity = (showCollisionDebug || collisionEditMode) ? 0.35f : 1.0f;
 
     float mapCenterX = BLOCK_NUM_X * BLOCK_SIZE * 0.5f;
     float mapCenterZ = BLOCK_NUM_Z * BLOCK_SIZE * 0.5f;
@@ -798,7 +1406,7 @@ void DrawEditor()
         VGet(camX, camY, camZ),
         VGet(mapCenterX, 0.0f, mapCenterZ));
 
-#pragma region ã‚°ãƒªãƒƒãƒ‰æç”»
+#pragma region ƒOƒŠƒbƒh•`‰æ
 
     if (showGrid)
     {
@@ -822,7 +1430,7 @@ void DrawEditor()
 #pragma endregion
 
 
-#pragma region ãƒ¢ãƒ‡ãƒ«æç”»
+#pragma region ƒ‚ƒfƒ‹•`‰æ
 
     for (int y = 0; y < BLOCK_NUM_Y; y++)
     {
@@ -838,7 +1446,9 @@ void DrawEditor()
                     {
                         MV1SetPosition(modelHandles[id], GetModelDrawPosition(FLOOR, x, y, z, FloorRot[y][z][x]));
                         MV1SetRotationXYZ(modelHandles[id], VGet(0.0f, RotToRad(FloorRot[y][z][x]), 0.0f));
+                        MV1SetOpacityRate(modelHandles[id], editorModelOpacity);
                         MV1DrawModel(modelHandles[id]);
+                        MV1SetOpacityRate(modelHandles[id], 1.0f);
                     }
                 }
 
@@ -850,7 +1460,9 @@ void DrawEditor()
                     {
                         MV1SetPosition(modelHandles[id], GetModelDrawPosition(WALL, x, y, z, WallRotA[y][z][x]));
                         MV1SetRotationXYZ(modelHandles[id], VGet(0.0f, RotToRad(WallRotA[y][z][x]), 0.0f));
+                        MV1SetOpacityRate(modelHandles[id], editorModelOpacity);
                         MV1DrawModel(modelHandles[id]);
+                        MV1SetOpacityRate(modelHandles[id], 1.0f);
                     }
                 }
 
@@ -862,7 +1474,9 @@ void DrawEditor()
                     {
                         MV1SetPosition(modelHandles[id], GetModelDrawPosition(WALL, x, y, z, WallRotB[y][z][x]));
                         MV1SetRotationXYZ(modelHandles[id], VGet(0.0f, RotToRad(WallRotB[y][z][x]), 0.0f));
+                        MV1SetOpacityRate(modelHandles[id], editorModelOpacity);
                         MV1DrawModel(modelHandles[id]);
+                        MV1SetOpacityRate(modelHandles[id], 1.0f);
                     }
                 }
 
@@ -874,7 +1488,9 @@ void DrawEditor()
                     {
                         MV1SetPosition(modelHandles[id], GetModelDrawPosition(CORNER, x, y, z, CornerRot[y][z][x]));
                         MV1SetRotationXYZ(modelHandles[id], VGet(0.0f, RotToRad(CornerRot[y][z][x]), 0.0f));
+                        MV1SetOpacityRate(modelHandles[id], editorModelOpacity);
                         MV1DrawModel(modelHandles[id]);
+                        MV1SetOpacityRate(modelHandles[id], 1.0f);
                     }
                 }
 
@@ -886,7 +1502,9 @@ void DrawEditor()
                     {
                         MV1SetPosition(modelHandles[id], GetModelDrawPosition(DECO, x, y, z, DecoRot[y][z][x]));
                         MV1SetRotationXYZ(modelHandles[id], VGet(0.0f, RotToRad(DecoRot[y][z][x]), 0.0f));
+                        MV1SetOpacityRate(modelHandles[id], editorModelOpacity);
                         MV1DrawModel(modelHandles[id]);
+                        MV1SetOpacityRate(modelHandles[id], 1.0f);
                     }
                 }
             }
@@ -896,7 +1514,7 @@ void DrawEditor()
 #pragma endregion
 
 
-#pragma region ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼æç”»
+#pragma region ƒvƒŒƒrƒ…[•`‰æ
 
     if (IsHoverValid())
     {
@@ -916,14 +1534,84 @@ void DrawEditor()
 
             MV1SetPosition(modelHandles[previewId], pos);
             MV1SetRotationXYZ(modelHandles[previewId], VGet(0.0f, RotToRad(currentRot), 0.0f));
+            // 2026-05-11: “–‚½‚è”»’è•ÒW’†‚É”z’uƒvƒŒƒrƒ…[‚àü‚ğ‰B‚³‚È‚¢‚æ‚¤“§‰ß‚·‚é‚½‚ß’Ç‰ÁB
+            MV1SetOpacityRate(modelHandles[previewId], editorModelOpacity);
             MV1DrawModel(modelHandles[previewId]);
+            MV1SetOpacityRate(modelHandles[previewId], 1.0f);
         }
     }
 
 #pragma endregion
 
 
-#pragma region ãƒã‚¤ãƒ©ã‚¤ãƒˆæç”»
+#pragma region “–‚½‚è”»’èƒfƒoƒbƒO•`‰æ
+
+    // 2026-05-11: “–‚½‚è”»’è‚ğƒ‚ƒfƒ‹‚â”z’uƒvƒŒƒrƒ…[‚É‰B‚³‚ê‚¸’¼ÚŒ©‚¦‚é‚æ‚¤AÅŒã‚ÉZƒoƒbƒtƒ@‚È‚µ‚Å•`‰æ‚·‚é‚½‚ß’Ç‰ÁB
+    if (showCollisionDebug || collisionEditMode)
+    {
+        SetUseZBuffer3D(FALSE);
+        SetWriteZBuffer3D(FALSE);
+
+        for (int y = 0; y < BLOCK_NUM_Y; y++)
+        {
+            for (int z = 0; z < BLOCK_NUM_Z; z++)
+            {
+                for (int x = 0; x < BLOCK_NUM_X; x++)
+                {
+                    if (CollisionMap[y][z][x] >= 0)
+                    {
+                        float x1 = x * BLOCK_SIZE;
+                        float z1 = z * BLOCK_SIZE;
+                        float x2 = (x + 1) * BLOCK_SIZE;
+                        float z2 = (z + 1) * BLOCK_SIZE;
+                        float yy = y * BLOCK_SIZE + 55.0f;
+                        int col = GetColor(255, 60, 60);
+
+                        DrawLine3D(VGet(x1, yy, z1), VGet(x2, yy, z1), col);
+                        DrawLine3D(VGet(x2, yy, z1), VGet(x2, yy, z2), col);
+                        DrawLine3D(VGet(x2, yy, z2), VGet(x1, yy, z2), col);
+                        DrawLine3D(VGet(x1, yy, z2), VGet(x1, yy, z1), col);
+                        DrawLine3D(VGet(x1, yy, z1), VGet(x2, yy, z2), col);
+                        DrawLine3D(VGet(x2, yy, z1), VGet(x1, yy, z2), col);
+                    }
+
+                    if (WallMapA[y][z][x] >= 0)
+                        DrawDefaultObjectCollision(WALL, WallMapA[y][z][x], x, y, z, WallRotA[y][z][x], GetColor(255, 170, 40));
+
+                    if (WallMapB[y][z][x] >= 0)
+                        DrawDefaultObjectCollision(WALL, WallMapB[y][z][x], x, y, z, WallRotB[y][z][x], GetColor(255, 170, 40));
+
+                    if (CornerMap[y][z][x] >= 0)
+                        DrawDefaultObjectCollision(CORNER, CornerMap[y][z][x], x, y, z, CornerRot[y][z][x], GetColor(255, 170, 40));
+
+                    if (DecoMap[y][z][x] >= 0)
+                        DrawDefaultObjectCollision(DECO, DecoMap[y][z][x], x, y, z, DecoRot[y][z][x], GetColor(255, 170, 40));
+
+                    int edgeMask = CollisionEdgeMap[y][z][x] >= 0 ? CollisionEdgeMap[y][z][x] : 0;
+                    for (int edge = 0; edge < 4; edge++)
+                    {
+                        if (edgeMask & GetCollisionEdgeBit(edge))
+                            DrawCollisionEdgeLine(x, y, z, edge, CollisionEdgeScaleMap[y][z][x][edge], CollisionEdgeThicknessMap[y][z][x][edge], GetColor(40, 220, 255));
+                    }
+                }
+            }
+        }
+
+        // 2026-05-11: ‚¢‚Ü‚Á‚Ä‚¢‚é”z’u—\’èƒIƒuƒWƒFƒNƒg‚ÌŠù’è“–‚½‚è”»’è‚àA’u‚­‘O‚©‚ç’¼ÚŒ©‚¦‚é‚æ‚¤’Ç‰ÁB
+        if (IsHoverValid())
+        {
+            DrawDefaultObjectCollision(currentTab, GetSelectedModel(), hoverX, currentLayer, hoverZ, currentRot, GetColor(255, 255, 0));
+        }
+    }
+
+    // 2026-05-11: •Ó•ÒW‚ÉA‚¢‚Ü’u‚±‚¤‚Æ‚µ‚Ä‚¢‚é•Ó‚ğ‰©F‚ÅƒvƒŒƒrƒ…[‚·‚é‚½‚ß’Ç‰ÁB
+    if (collisionEditMode && collisionEdgeEditMode && IsHoverValid())
+    {
+        DrawCollisionEdgeLine(hoverX, currentLayer, hoverZ, currentRot, CollisionEdgeScaleMap[currentLayer][hoverZ][hoverX][currentRot], CollisionEdgeThicknessMap[currentLayer][hoverZ][hoverX][currentRot], GetColor(255, 255, 0));
+    }
+
+#pragma endregion
+#pragma region ƒnƒCƒ‰ƒCƒg•`‰æ
 
     if (IsHoverValid())
     {
@@ -940,7 +1628,7 @@ void DrawEditor()
 #pragma endregion
 
 
-#pragma region é¸æŠç¯„å›²æç”»
+#pragma region ‘I‘ğ”ÍˆÍ•`‰æ
 
     if (HasValidSelection())
     {
@@ -962,7 +1650,7 @@ void DrawEditor()
     }
 
 #pragma endregion
-#pragma region é–‹å§‹ / ã‚´ãƒ¼ãƒ«æç”»
+#pragma region ŠJn / ƒS[ƒ‹•`‰æ
 
     if (IsMapPosValid(startY, startZ, startX))
     {
@@ -991,26 +1679,26 @@ void DrawEditor()
 #pragma endregion
 
 
-    
-#pragma region UI / ãƒ‡ãƒãƒƒã‚°æç”»
+
+#pragma region UI / ƒfƒoƒbƒO•`‰æ
 
     DrawEditorUI();
 
-   /* DrawFormatString(0, 40, GetColor(255, 255, 255),
-        "map=%d layer=%d rot=%d tab=%d model=%d brush=%s",
-        currentMapIndex, currentLayer, currentRot, currentTab, GetSelectedModel(),
-        brushMode ? "ON" : "OFF");
+    /* DrawFormatString(0, 40, GetColor(255, 255, 255),
+         "map=%d layer=%d rot=%d tab=%d model=%d brush=%s",
+         currentMapIndex, currentLayer, currentRot, currentTab, GetSelectedModel(),
+         brushMode ? "ON" : "OFF");
 
-    DrawFormatString(0, 60, GetColor(255, 255, 0),
-        "hoverX=%d hoverZ=%d  F5:Save F9:Load",
-        hoverX, hoverZ);
+     DrawFormatString(0, 60, GetColor(255, 255, 0),
+         "hoverX=%d hoverZ=%d  F5:Save F9:Load",
+         hoverX, hoverZ);
 
-    DrawFormatString(0, 80, GetColor(0, 255, 255),
-        "select=%s copy=%s size=%d,%d  V:Select Ctrl+C/V/Z",
-        selectMode ? "ON" : "OFF",
-        hasCopyData ? "YES" : "NO",
-        copySizeX, copySizeZ);
-        */
+     DrawFormatString(0, 80, GetColor(0, 255, 255),
+         "select=%s copy=%s size=%d,%d  V:Select Ctrl+C/V/Z",
+         selectMode ? "ON" : "OFF",
+         hasCopyData ? "YES" : "NO",
+         copySizeX, copySizeZ);
+         */
 #pragma endregion
 }
 

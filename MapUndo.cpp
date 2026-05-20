@@ -24,6 +24,19 @@ struct UndoData
 
     int EventMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 
+    // 2026-05-11: 当たり判定編集もUndoで戻せるよう追加。
+    int CollisionMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+    // 2026-05-11: 辺単位の当たり判定編集もUndoで戻せるよう追加。
+    int CollisionEdgeMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+    // 2026-05-11: 辺当たり判定の伸縮値もUndoで戻せるよう追加。
+    int CollisionEdgeScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X][4];
+    // 2026-05-11: 辺当たり判定の厚さ編集もUndoで戻せるよう追加。
+    int CollisionEdgeThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X][4];
+    // 2026-05-13: コーナー当たり判定の調整値もUndoで戻せるよう追加。
+    int CollisionCornerScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+    int CollisionCornerThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+    int CollisionCornerOffsetMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+
     int startX;
     int startY;
     int startZ;
@@ -60,6 +73,18 @@ void PushUndo()
     memcpy(data.DecoRot, ::DecoRot, sizeof(::DecoRot));
 
     memcpy(data.EventMap, ::EventMap, sizeof(::EventMap));
+    // 2026-05-11: 当たり判定編集をUndo履歴に保存するため追加。
+    memcpy(data.CollisionMap, ::CollisionMap, sizeof(::CollisionMap));
+    // 2026-05-11: 辺当たり判定編集をUndo履歴に保存するため追加。
+    memcpy(data.CollisionEdgeMap, ::CollisionEdgeMap, sizeof(::CollisionEdgeMap));
+    // 2026-05-11: 辺当たり判定の伸縮値をUndo履歴に保存するため追加。
+    memcpy(data.CollisionEdgeScaleMap, ::CollisionEdgeScaleMap, sizeof(::CollisionEdgeScaleMap));
+    // 2026-05-11: 辺当たり判定の厚さをUndo履歴に保存するため追加。
+    memcpy(data.CollisionEdgeThicknessMap, ::CollisionEdgeThicknessMap, sizeof(::CollisionEdgeThicknessMap));
+    // 2026-05-13: コーナー当たり判定の調整値をUndo履歴に保存するため追加。
+    memcpy(data.CollisionCornerScaleMap, ::CollisionCornerScaleMap, sizeof(::CollisionCornerScaleMap));
+    memcpy(data.CollisionCornerThicknessMap, ::CollisionCornerThicknessMap, sizeof(::CollisionCornerThicknessMap));
+    memcpy(data.CollisionCornerOffsetMap, ::CollisionCornerOffsetMap, sizeof(::CollisionCornerOffsetMap));
 
     data.startX = startX;
     data.startY = startY;
@@ -92,6 +117,18 @@ void UndoMap()
     memcpy(::DecoRot, data.DecoRot, sizeof(::DecoRot));
 
     memcpy(::EventMap, data.EventMap, sizeof(::EventMap));
+    // 2026-05-11: Undo実行時に当たり判定編集も戻すため追加。
+    memcpy(::CollisionMap, data.CollisionMap, sizeof(::CollisionMap));
+    // 2026-05-11: Undo実行時に辺当たり判定編集も戻すため追加。
+    memcpy(::CollisionEdgeMap, data.CollisionEdgeMap, sizeof(::CollisionEdgeMap));
+    // 2026-05-11: Undo実行時に辺当たり判定の伸縮値も戻すため追加。
+    memcpy(::CollisionEdgeScaleMap, data.CollisionEdgeScaleMap, sizeof(::CollisionEdgeScaleMap));
+    // 2026-05-11: Undo実行時に辺当たり判定の厚さも戻すため追加。
+    memcpy(::CollisionEdgeThicknessMap, data.CollisionEdgeThicknessMap, sizeof(::CollisionEdgeThicknessMap));
+    // 2026-05-13: Undo実行時にコーナー当たり判定の調整値も戻すため追加。
+    memcpy(::CollisionCornerScaleMap, data.CollisionCornerScaleMap, sizeof(::CollisionCornerScaleMap));
+    memcpy(::CollisionCornerThicknessMap, data.CollisionCornerThicknessMap, sizeof(::CollisionCornerThicknessMap));
+    memcpy(::CollisionCornerOffsetMap, data.CollisionCornerOffsetMap, sizeof(::CollisionCornerOffsetMap));
 
     startX = data.startX;
     startY = data.startY;

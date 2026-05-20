@@ -58,7 +58,6 @@ void Title::Init() {
 }
 
 void Title::Draw() {
-	DrawString(WIDTH / 2, HEIGHT / 2, "タイトル画面",GetColor(255,255,255));
 	uiManager.Draw();
 }
 void Title::Update(SceneManager& manager) {
@@ -110,7 +109,6 @@ void Game::Init() {
 
 void Game::Draw() {
 	p.Draw();
-	DrawString(WIDTH / 2, HEIGHT-550, "ゲーム画面", GetColor(255, 255, 255));
 	DrawGameMap();
 
 }
@@ -133,7 +131,7 @@ void Result::Init() {
 }
 
 void Result::Draw() {
-	DrawString(WIDTH / 2, HEIGHT / 2, "リザルト画面", GetColor(255, 255, 255));
+
 }
 void Result::Update(SceneManager& manager) {
 	if (Input::IsActionTrigger(Action::Confirm)) {

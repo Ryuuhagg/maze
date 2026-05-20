@@ -22,6 +22,8 @@ const int BLOCK_NUM_Z = 20;
 
 const float BLOCK_SIZE = 400.0f;
 
+const float cornerRadius = BLOCK_SIZE * 0.18f;
+
 #pragma endregion
 
 
@@ -65,6 +67,18 @@ extern int DecoMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 extern int DecoRot[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 
 extern int EventMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+// 2026-05-11: エディターで手動設定した当たり判定を保存し、Loader側でも使うため追加。
+extern int CollisionMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+// 2026-05-11: Loaderの壁ライン判定と同じ「辺単位」の当たり判定を編集・保存するため追加。
+extern int CollisionEdgeMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+// 2026-05-11: 辺当たり判定を伸ばしたり縮めたりする長さ倍率を保存するため追加。
+extern int CollisionEdgeScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X][4];
+// 2026-05-11: 辺当たり判定の厚さ倍率を編集・保存するため追加。
+extern int CollisionEdgeThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X][4];
+// 2026-05-13: コーナー当たり判定の長さ・厚み・奥行を保存/読込/Undoで共有するため追加。
+extern int CollisionCornerScaleMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+extern int CollisionCornerThicknessMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
+extern int CollisionCornerOffsetMap[BLOCK_NUM_Y][BLOCK_NUM_Z][BLOCK_NUM_X];
 
 #pragma endregion
 
@@ -113,11 +127,24 @@ extern int tabModelCount[TAB_MAX];
 
 #pragma endregion
 
+#pragma region ===== 当たり判定 =====
+
+bool CanMoveCellToCell(int y, int fromX, int fromZ, int toX, int toZ);
+bool IsCellBlocked(int y, int z, int x);
+
+#pragma endregion
 
 #pragma region ===== 表示設定 =====
 
 extern bool showGrid;
 extern bool brushMode;
+// 2026-05-11: 当たり判定の編集モードとデバッグ表示をエディターで切り替えるため追加。
+extern bool showCollisionDebug;
+extern bool collisionEditMode;
+// 2026-05-11: 当たり判定編集をセル単位/辺単位で切り替えるため追加。
+extern bool collisionEdgeEditMode;
+// 2026-05-13: ホイール編集を長さモード/厚みモードで切り替えるため追加。
+extern bool collisionDepthEditMode;
 
 #pragma endregion
 

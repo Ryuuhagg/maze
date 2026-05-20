@@ -37,6 +37,31 @@ static bool IsSaveLoadPosValid(int y, int z, int x)
         x >= 0 && x < BLOCK_NUM_X;
 }
 
+static void ClearEventIdForSave(int eventId)
+{
+    // 2026-05-13: START/GOAL保存時に古いイベントマーカーが複数残らないよう追加。
+    for (int y = 0; y < BLOCK_NUM_Y; y++)
+        for (int z = 0; z < BLOCK_NUM_Z; z++)
+            for (int x = 0; x < BLOCK_NUM_X; x++)
+                if (EventMap[y][z][x] == eventId)
+                    EventMap[y][z][x] = -1;
+}
+
+static void SyncEventMarkersFromStartGoal()
+{
+    // 2026-05-13: START/GOAL座標と[EVENT]保存内容がズレないよう、保存直前に同期するため追加。
+    if (IsSaveLoadPosValid(startY, startZ, startX))
+    {
+        ClearEventIdForSave(0);
+        EventMap[startY][startZ][startX] = 0;
+    }
+
+    if (IsSaveLoadPosValid(goalY, goalZ, goalX))
+    {
+        ClearEventIdForSave(1);
+        EventMap[goalY][goalZ][goalX] = 1;
+    }
+}
 #pragma endregion
 
 
@@ -44,6 +69,8 @@ static bool IsSaveLoadPosValid(int y, int z, int x)
 
 void SaveMap()
 {
+    SyncEventMarkersFromStartGoal();
+
     char fileName[64];
     sprintf_s(fileName, "map%d.csv", currentMapIndex);
 
@@ -80,15 +107,29 @@ void SaveMap()
             for (int x = 0; x < BLOCK_NUM_X; x++)
                 if (WallMapB[y][z][x] >= 0)
                     ofs << y << "," << z << "," << x << "," << WallMapB[y][z][x] << "," << WallRotB[y][z][x] << "\n";
-
+    // 2026-05-13: コーナー当たり判定の長さ/厚み/奥行も保存するためCSV列を追加。
     ofs << "\n[CORNER]\n";
-    ofs << "y,z,x,id,rot\n";
-    for (int y = 0; y < BLOCK_NUM_Y; y++)
-        for (int z = 0; z < BLOCK_NUM_Z; z++)
-            for (int x = 0; x < BLOCK_NUM_X; x++)
-                if (CornerMap[y][z][x] >= 0)
-                    ofs << y << "," << z << "," << x << "," << CornerMap[y][z][x] << "," << CornerRot[y][z][x] << "\n";
+    ofs << "y,z,x,id,rot,scale,thickness,offset\n";
 
+    for (int y = 0; y < BLOCK_NUM_Y; y++)
+    {
+        for (int z = 0; z < BLOCK_NUM_Z; z++)
+        {
+            for (int x = 0; x < BLOCK_NUM_X; x++)
+            {
+                if (CornerMap[y][z][x] >= 0)
+                {
+                    ofs << y << "," << z << "," << x << ","
+                        << CornerMap[y][z][x] << ","
+                        << CornerRot[y][z][x] << ","
+                        << CollisionCornerScaleMap[y][z][x] << ","
+                        << CollisionCornerThicknessMap[y][z][x] << ","
+                        << CollisionCornerOffsetMap[y][z][x]
+                        << "\n";
+                }
+            }
+        }
+    }
     ofs << "\n[DECO]\n";
     ofs << "y,z,x,id,rot\n";
     for (int y = 0; y < BLOCK_NUM_Y; y++)
@@ -97,6 +138,22 @@ void SaveMap()
                 if (DecoMap[y][z][x] >= 0)
                     ofs << y << "," << z << "," << x << "," << DecoMap[y][z][x] << "," << DecoRot[y][z][x] << "\n";
 
+    ofs << "\n[COLLISION]\n";
+    ofs << "y,z,x,block\n";
+    // 2026-05-11: エディターで置いた手動当たり判定をLoaderでも再現するため保存を追加。
+    for (int y = 0; y < BLOCK_NUM_Y; y++)
+        for (int z = 0; z < BLOCK_NUM_Z; z++)
+            for (int x = 0; x < BLOCK_NUM_X; x++)
+                if (CollisionMap[y][z][x] >= 0)
+                    ofs << y << "," << z << "," << x << "," << CollisionMap[y][z][x] << "\n";
+    ofs << "\n[COLLISION_EDGE]\n";
+    ofs << "y,z,x,mask,s0,s1,s2,s3,t0,t1,t2,t3\n";
+    // 2026-05-11: Loaderの壁ライン判定と同じ辺単位の手動当たり判定を保存するため追加。
+    for (int y = 0; y < BLOCK_NUM_Y; y++)
+        for (int z = 0; z < BLOCK_NUM_Z; z++)
+            for (int x = 0; x < BLOCK_NUM_X; x++)
+                if (CollisionEdgeMap[y][z][x] >= 0)
+                    ofs << y << "," << z << "," << x << "," << CollisionEdgeMap[y][z][x] << "," << CollisionEdgeScaleMap[y][z][x][0] << "," << CollisionEdgeScaleMap[y][z][x][1] << "," << CollisionEdgeScaleMap[y][z][x][2] << "," << CollisionEdgeScaleMap[y][z][x][3] << "," << CollisionEdgeThicknessMap[y][z][x][0] << "," << CollisionEdgeThicknessMap[y][z][x][1] << "," << CollisionEdgeThicknessMap[y][z][x][2] << "," << CollisionEdgeThicknessMap[y][z][x][3] << "\n";
     ofs << "\n[EVENT]\n";
     ofs << "y,z,x,id\n";
     for (int y = 0; y < BLOCK_NUM_Y; y++)
@@ -118,6 +175,8 @@ void LoadMap(int mapIndex)
     currentMapIndex = mapIndex;
 
     ResetAllMap();
+
+    SyncEventMarkersFromStartGoal();
 
     char fileName[64];
     sprintf_s(fileName, "map%d.csv", currentMapIndex);
@@ -217,6 +276,17 @@ void LoadMap(int mapIndex)
             {
                 CornerMap[y][z][x] = stoi(cols[3]);
                 CornerRot[y][z][x] = stoi(cols[4]);
+
+                // 2026-05-13: コーナー当たり判定の長さ/厚みをCSVから復元するため追加。
+                CollisionCornerScaleMap[y][z][x] =
+                    cols.size() > 5 ? stoi(cols[5]) : 100;
+
+                CollisionCornerThicknessMap[y][z][x] =
+                    cols.size() > 6 ? stoi(cols[6]) : 100;
+
+                // 2026-05-13: コーナー当たり判定の奥行オフセットもCSVから復元するため追加。
+                CollisionCornerOffsetMap[y][z][x] =
+                    cols.size() > 7 ? stoi(cols[7]) : 0;
             }
         }
         else if (section == "[DECO]" && cols.size() >= 5)
@@ -229,6 +299,38 @@ void LoadMap(int mapIndex)
             {
                 DecoMap[y][z][x] = stoi(cols[3]);
                 DecoRot[y][z][x] = stoi(cols[4]);
+            }
+        }
+        else if (section == "[COLLISION]" && cols.size() >= 4)
+        {
+            int y = stoi(cols[0]);
+            int z = stoi(cols[1]);
+            int x = stoi(cols[2]);
+
+            // 2026-05-13: 保存済みのセル当たり判定をエディターへ復元するため追加。
+            if (IsSaveLoadPosValid(y, z, x))
+            {
+                CollisionMap[y][z][x] = stoi(cols[3]);
+            }
+        }
+        else if (section == "[COLLISION_EDGE]" && cols.size() >= 4)
+        {
+            int y = stoi(cols[0]);
+            int z = stoi(cols[1]);
+            int x = stoi(cols[2]);
+
+            if (IsSaveLoadPosValid(y, z, x))
+            {
+                CollisionEdgeMap[y][z][x] = stoi(cols[3]);
+
+                for (int edge = 0; edge < 4; edge++)
+                {
+                    CollisionEdgeScaleMap[y][z][x][edge] =
+                        cols.size() > (4 + edge) ? stoi(cols[4 + edge]) : 100;
+
+                    CollisionEdgeThicknessMap[y][z][x][edge] =
+                        cols.size() > (8 + edge) ? stoi(cols[8 + edge]) : 100;
+                }
             }
         }
         else if (section == "[EVENT]" && cols.size() >= 4)
@@ -245,6 +347,9 @@ void LoadMap(int mapIndex)
     }
 
     ifs.close();
+
+    // 2026-05-13: 古い[EVENT]行よりSTART/GOAL行を優先して復元するため、読込後に再同期。
+    SyncEventMarkersFromStartGoal();
 }
 
 #pragma endregion

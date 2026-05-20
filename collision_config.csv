@@ -1,0 +1,12 @@
+# 2026-05-11: モデル追加時に、コードを触らず既定当たり判定を設定するため追加。
+# id,type,radius,width,depth
+# type: NONE / CIRCLE / BOX / WALL / STAIRS
+# CIRCLE: id,CIRCLE,radius
+# BOX:    id,BOX,0,width,depth
+# WALL:   id,WALL
+# STAIRS: id,STAIRS
+1,WALL
+2,CIRCLE,120
+5,STAIRS
+6,BOX,0,120,120
+7,CIRCLE,80

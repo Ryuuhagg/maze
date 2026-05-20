@@ -10,7 +10,11 @@ enum class Action {
 	Up,
 	Down,
 	Left,
-	Right
+	Right,
+	MoveUp,
+	MoveDown,
+	MoveLeft,
+	MoveRight
 };
 
 class Input {

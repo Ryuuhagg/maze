@@ -83,6 +83,18 @@ bool Input::IsActionPressed(Action action) {
 
     case Action::Left:
         return IsKeyPressed(KEY_INPUT_LEFT);
+
+    case Action::MoveUp:
+        return IsKeyPressed(config.KeyFront);
+
+    case Action::MoveDown:
+        return IsKeyPressed(config.KeyBack);
+
+    case Action::MoveRight:
+        return IsKeyPressed(config.KeyRight);
+
+    case Action::MoveLeft:
+        return IsKeyPressed(config.KeyLeft);
     }
 
     return false;
@@ -120,8 +132,8 @@ float Input::GetAxisLX() {
     float x = 0;
 
     // キーボード
-    if (IsActionPressed(Action::Up)) x -= 1.0f;
-    if (IsActionPressed(Action::Down)) x += 1.0f;
+    if (IsActionPressed(Action::MoveRight)) x += 1.0f;
+    if (IsActionPressed(Action::MoveLeft)) x -= 1.0f;
 
     // パッド
     float lx = GetPadLX();
@@ -138,8 +150,8 @@ float Input::GetAxisLY() {
     float y = 0;
 
     // キーボード
-    if (IsActionPressed(Action::Right)) y += 1.0f;
-    if (IsActionPressed(Action::Left)) y -= 1.0f;
+    if (IsActionPressed(Action::MoveUp)) y += 1.0f;
+    if (IsActionPressed(Action::MoveDown)) y -= 1.0f;
 
     // パッド
     float ly = GetPadLY();
@@ -158,8 +170,8 @@ float Input::GetAxisRX() {
     float x = 0;
 
     // キーボード
-    if (IsKeyPressed(KEY_INPUT_LEFT)) x -= 1.0f;
-    if (IsKeyPressed(KEY_INPUT_RIGHT)) x += 1.0f;
+    if (IsActionPressed(Action::Right)) x += 1.0f;
+    if (IsActionPressed(Action::Left)) x -= 1.0f;
 
     // パッド
     float lx = GetPadRX();
@@ -176,8 +188,8 @@ float Input::GetAxisRY() {
     float y = 0;
 
     // キーボード
-    if (IsKeyPressed(KEY_INPUT_UP)) y += 1.0f;
-    if (IsKeyPressed(KEY_INPUT_DOWN)) y -= 1.0f;
+    if (IsActionPressed(Action::Up)) y -= 1.0f;
+    if (IsActionPressed(Action::Down)) y += 1.0f;
 
     // パッド
     float ly = GetPadRY();

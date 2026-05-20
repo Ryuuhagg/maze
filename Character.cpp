@@ -27,6 +27,8 @@ void Player::Init() {
 
     m_Size = 10;
     angle = { 0.0f, 1.5f };
+
+    m_layer = GetMapLayerFromWorldY(pos.y);
 }
 
 void Player::Update() {
@@ -76,8 +78,16 @@ void Player::Move() {
         isDash = true;
     }
 
-    pos.x += moveX * speed;
-    pos.z += moveZ * speed;
+    //pos.x += moveX * speed;
+    //pos.z += moveZ * speed;
+
+    const float playerRadius = 60.0f;
+    VECTOR nextPos = pos;
+    nextPos.x += moveX * speed;
+    nextPos.z += moveZ * speed;
+    pos = ResolvePlayerMapCollision(pos, nextPos, playerRadius, m_layer);
+
+    m_layer = GetMapLayerFromWorldY(pos.y + BLOCK_SIZE * 0.5f);
 }
 
 void Player::Dash() {
@@ -111,7 +121,10 @@ void Player::Jump() {
         isGround = true;
     }
 
-    pos.y = y;
+    //pos.y = y;
+
+    float groundY = GetMapGroundY(pos.x, pos.z);
+    pos.y += (groundY + y - pos.y) * 0.2f;
 }
 
 void Player::UpdateState() {
@@ -179,7 +192,7 @@ void Player::ChangeModel(const ModelData& data) {
 
 void Player::GetAngle(Angle& a) { C_angle = a; }
 
-Camela::Camela(Player& p) :Character(0),p(p),distance(180)
+Camela::Camela(Player& p) :Character(0),p(p),distance(360)
 {
     Init();
 }
@@ -194,7 +207,7 @@ void Camela::Update() {
         p.getVECTOR().x - sinf(camelaAngle.x) * distance,
         p.getVECTOR().y + sinf(camelaAngle.y) * distance,
         p.getVECTOR().z - cosf(camelaAngle.x) * distance
-    );
+    ); 
     SetLightPosition(camPos);
 
     VECTOR target = p.getVECTOR();
@@ -213,6 +226,7 @@ void Camela::Update() {
         , p.getVECTOR().z - cosf(camelaAngle.x) * distance)
         , p.getVECTOR()
     );
+
     MoveAngle();
 }
 
